@@ -5,8 +5,7 @@ import com.scarlatti.swingutils.layout.RelativeLayout;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * ______    __                         __           ____             __     __  __  _
@@ -19,83 +18,100 @@ import java.util.List;
  */
 public class RowWidget implements Widget {
 
-    private List<Column> columns = new ArrayList<>();
+    private JPanel jPanel;
 
-    private JPanel rowJPanel;
+    private RowWidget(JPanel jPanel) {
+        this.jPanel = jPanel;
+    }
 
-    /**
-     * Add onto the existing ui components
-     *
-     * @param container the ui component to add
-     * @param width     the width for this column
-     */
-    public void addColumn(Container container, int width) {
-        columns.add(new Column(container, width));
+    public static RowWidget createRow(Consumer<JPanel> config) {
+        JPanel jPanel = new JPanel(new RelativeLayout());
+        config.accept(jPanel);
+        return new RowWidget(jPanel);
     }
 
     @Override
     public Container getUi() {
-        return rowJPanel == null ? buildUiFirstTimeBox() : rowJPanel;
+        return jPanel;
     }
 
-    Container buildUiFirstTimeBox() {
-        rowJPanel = new JPanel();
-        rowJPanel.setBackground(Color.GREEN);
-        rowJPanel.setLayout(new BoxLayout(rowJPanel, BoxLayout.X_AXIS));
-
-        for (Column column : columns) {
-            rowJPanel.add(column.container);
-        }
-
-        return rowJPanel;
-    }
-
-    Container buildUiFirstTimeGridBag() {
-        rowJPanel = new JPanel();
-        rowJPanel.setBackground(Color.GREEN);
-        rowJPanel.setLayout(new GridBagLayout());
-
-        int gridxCount = 0;
-
-        for (int i = 0; i < 12; i++) {
-            rowJPanel.add(Box.createRigidArea(new Dimension(40, 40)));
-        }
-
-        for (Column column : columns) {
-            GridBagConstraints constraints = new GridBagConstraints();
-            constraints.gridy = 0;
-            constraints.gridx = gridxCount;
-            constraints.gridwidth = column.width;
-            constraints.fill = GridBagConstraints.HORIZONTAL;
-            constraints.weightx = 1;
-            constraints.weighty = 1;
-            gridxCount += column.width;
-
-            rowJPanel.add(column.container, constraints);
-        }
-
-        return rowJPanel;
-    }
-
-    Container buildUiFirstTimeWithRelativeLayout() {
-        rowJPanel = new JPanel();
-        rowJPanel.setBackground(Color.GREEN);
-        rowJPanel.setLayout(new RelativeLayout(RelativeLayout.X_AXIS));
-
-        for (Column column : columns) {
-            rowJPanel.add(column.container, (float) column.width);
-        }
-
-        return rowJPanel;
-    }
-
-    public static class Column {
-        Container container;
-        int width;
-
-        public Column(Container container, int width) {
-            this.container = container;
-            this.width = width;
-        }
-    }
+    //    private List<Column> columns = new ArrayList<>();
+//
+//    private JPanel rowJPanel;
+//
+//    /**
+//     * Add onto the existing ui components
+//     *
+//     * @param container the ui component to add
+//     * @param width     the width for this column
+//     */
+//    public void addColumn(Container container, int width) {
+//        columns.add(new Column(container, width));
+//    }
+//
+//    @Override
+//    public Container getUi() {
+//        return rowJPanel == null ? buildUiFirstTimeBox() : rowJPanel;
+//    }
+//
+//    Container buildUiFirstTimeBox() {
+//        rowJPanel = new JPanel();
+//        rowJPanel.setBackground(Color.GREEN);
+//        rowJPanel.setLayout(new BoxLayout(rowJPanel, BoxLayout.X_AXIS));
+//
+//        for (Column column : columns) {
+//            rowJPanel.add(column.container);
+//        }
+//
+//        return rowJPanel;
+//    }
+//
+//    Container buildUiFirstTimeGridBag() {
+//        rowJPanel = new JPanel();
+//        rowJPanel.setBackground(Color.GREEN);
+//        rowJPanel.setLayout(new GridBagLayout());
+//
+//        int gridxCount = 0;
+//
+//        for (int i = 0; i < 12; i++) {
+//            rowJPanel.add(Box.createRigidArea(new Dimension(40, 40)));
+//        }
+//
+//        for (Column column : columns) {
+//            GridBagConstraints constraints = new GridBagConstraints();
+//            constraints.gridy = 0;
+//            constraints.gridx = gridxCount;
+//            constraints.gridwidth = column.width;
+//            constraints.fill = GridBagConstraints.HORIZONTAL;
+//            constraints.weightx = 1;
+//            constraints.weighty = 1;
+//            gridxCount += column.width;
+//
+//            rowJPanel.add(column.container, constraints);
+//        }
+//
+//        return rowJPanel;
+//    }
+//
+//    Container buildUiFirstTimeWithRelativeLayout() {
+//        rowJPanel = new JPanel();
+//        rowJPanel.setBackground(Color.GREEN);
+//        rowJPanel.setLayout(new RelativeLayout(RelativeLayout.X_AXIS));
+//
+//        for (Column column : columns) {
+//            rowJPanel.add(column.container, (float) column.width);
+//        }
+//
+//        return rowJPanel;
+//    }
+//
+//    public static class Column {
+//        Container container;
+//        int width;
+//
+//        public Column(Container container, int width) {
+//            this.container = container;
+//            this.width = width;
+//        }
+//    }
 }
