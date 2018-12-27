@@ -69,7 +69,36 @@ Widget.create(new CoolWidget(), widget -> {
 });
 
 
+WizardWidget wizardWidget = new WizardWidget(wizard -> {
+	wizard.icon = new Image("asdf");
+	wizard.scrollX = true;
+	wizard.scrollY = true;
+	wizard.content = new FileChooserWidget(fileChooser -> {
+		fileChooser.mode = OPEN;
+		fileChooser.initialFile = Paths.get("asdf");
+		fileChooser.getFileStrategy
+	});
+})
 
+WizardWidget wizardWidget = new WizardWidget(wizard -> {
+	wizard.setIcon(new Image("asdf"));
+	wizard.setScrollX(true);
+	wizard.setScrollY(true);
+	wizard.content = new FileChooserWidget(fileChooser -> {
+		fileChooser.mode = OPEN;
+		fileChooser.initialFile = Paths.get("asdf");
+		fileChooser.getFileStrategy
+	});
+})
+
+provide:
+-----------------
+- empty constructor
+- constructor with props
+- constructor with props config
+- getter for props
+- use public properties for now
+- use props as an inner class
 
 
 

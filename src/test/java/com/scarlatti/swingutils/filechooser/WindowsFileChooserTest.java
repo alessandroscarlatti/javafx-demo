@@ -1,6 +1,5 @@
 package com.scarlatti.swingutils.filechooser;
 
-import com.scarlatti.swingutils.grid.FileChooserWidget;
 import org.junit.Test;
 
 import javax.swing.*;
@@ -11,55 +10,65 @@ public class WindowsFileChooserTest {
 
     @Test
     public void testFileChooserReturnValue() {
-        Path selectedFile = new WindowsFileChooser()
-            .withFilter("All Files", "*.*")
-            .withTitle("Choose Keystore")
-            .withInitialFile(Paths.get("build.gradle"))
-            .showOpenFileDialog();
+        WindowsFileChooser fileChooserWidget = new WindowsFileChooser(fileChooser -> {
+            fileChooser.addFilter("All Files", "*.*");
+            fileChooser.title = "Choose Keystore";
+            fileChooser.initialFile = Paths.get("build.gradle");
+        });
+
+        Path selectedFile = fileChooserWidget.getFile();
 
         System.out.println("Selected file: " + selectedFile);
     }
 
     @Test
     public void testChooseWithInitialFile() {
-        Path selectedFile = new WindowsFileChooser()
-            .withFilter("All Files", "*.*")
-            .withTitle("Choose Keystore")
-            .withInitialFile(Paths.get("build.gradle"))
-            .showOpenFileDialog();
+        WindowsFileChooser fileChooserWidget = new WindowsFileChooser(fileChooser -> {
+            fileChooser.addFilter("All Files", "*.*");
+            fileChooser.title = "Choose Keystore";
+            fileChooser.initialFile = Paths.get("build.gradle");
+        });
+
+        Path selectedFile = fileChooserWidget.getFile();
 
         System.out.println("Selected file: " + selectedFile);
     }
 
     @Test
     public void testChooseWithInitialDir() {
-        Path selectedFile = new WindowsFileChooser()
-            .withFilter("All Files", "*.*")
-            .withTitle("Choose Keystore")
-            .withInitialFile(Paths.get("build"))
-            .showOpenFileDialog();
+        WindowsFileChooser fileChooserWidget = new WindowsFileChooser(fileChooser -> {
+            fileChooser.addFilter("All Files", "*.*");
+            fileChooser.title = "Choose Keystore";
+            fileChooser.initialFile = Paths.get("build");
+        });
+
+        Path selectedFile = fileChooserWidget.getFile();
 
         System.out.println("Selected file: " + selectedFile);
     }
 
     @Test
     public void canSuggestNonExistingFileForSave() {
-        Path selectedFile = new WindowsFileChooser()
-            .withFilter("All Files (*.*)", "*.*")
-            .withFilter("Text Files (*.txt)", "*.txt")
-            .withTitle("Choose Text File")
-            .withInitialFile(Paths.get("src/main/somefile.txt"))
-            .showSaveFileDialog();
+        WindowsFileChooser fileChooserWidget = new WindowsFileChooser(fileChooser -> {
+            fileChooser.addFilter("All Files (*.*)", "*.*");
+            fileChooser.addFilter("Text Files (*.txt)", "*.txt");
+            fileChooser.title = "Save Text File";
+            fileChooser.initialFile = Paths.get("src/main/somefile.txt");
+        });
+
+        Path selectedFile = fileChooserWidget.getFile();
 
         System.out.println("Selected file: " + selectedFile);
     }
 
     @Test
     public void canSuggestFileForSaveWithNoFilters() {
-        Path selectedFile = new WindowsFileChooser()
-            .withTitle("Choose Text File")
-            .withInitialFile(Paths.get("src/main/somefile.txt"))
-            .showSaveFileDialog();
+        WindowsFileChooser fileChooserWidget = new WindowsFileChooser(fileChooser -> {
+            fileChooser.title = "Choose Keystore";
+            fileChooser.initialFile = Paths.get("src/main/somefile.txt");
+        });
+
+        Path selectedFile = fileChooserWidget.getFile();
 
         System.out.println("Selected file: " + selectedFile);
     }
@@ -67,20 +76,22 @@ public class WindowsFileChooserTest {
     @Test
     public void testFileChooserReturnValueWithParent() {
         JFrame jFrame = new JFrame();
-        FileChooserWidget fileChooserWidget = new FileChooserWidget(FileChooserWidget.FileChooserMode.OPEN);
+        FileChooserWidget fileChooserWidget = new FileChooserWidget();
         jFrame.setContentPane(fileChooserWidget.getUi());
         jFrame.pack();
 
         try {
             jFrame.setVisible(true);
 
-            Path selectedFile = new WindowsFileChooser()
-                .withFilter("All Files (*.*)", "*")
-                .withFilter("Text Files (*.txt)", "*.txt")
-                .withTitle("Choose Keystore")
-                .withInitialFile(Paths.get("build.gradle"))
-                .withGuiParent(jFrame)
-                .showOpenFileDialog();
+            WindowsFileChooser windowsFileChooser = new WindowsFileChooser(fileChooser -> {
+                fileChooser.addFilter("All Files (*.*)", "*.*");
+                fileChooser.addFilter("Text Files (*.txt)", "*.txt");
+                fileChooser.title = "Save Text File";
+                fileChooser.initialFile = Paths.get("build.gradle");
+                fileChooser.setGuiParent(jFrame);
+            });
+
+            Path selectedFile = windowsFileChooser.getFile();
 
             System.out.println("Selected file: " + selectedFile);
         } finally {

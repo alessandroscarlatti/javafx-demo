@@ -1,8 +1,7 @@
-package com.scarlatti.swingutils.grid;
+package com.scarlatti.swingutils.filechooser;
 
 import com.scarlatti.swingutils.SwingUtils;
 import com.scarlatti.swingutils.Widget;
-import com.scarlatti.swingutils.filechooser.WindowsFileChooser;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -11,6 +10,7 @@ import java.awt.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static com.scarlatti.swingutils.SwingUtils.IconScale.ICON_SCALE_15;
@@ -27,8 +27,16 @@ public class FileChooserWidget implements Widget {
     private JTextField fileTextField;
     private JButton fileChooserButton;
 
-    public FileChooserWidget(FileChooserMode mode) {
-        this.props.mode = mode;
+    public FileChooserWidget() {
+    }
+
+    public FileChooserWidget(FileChooserWidgetProps props) {
+        this.props = props;
+    }
+
+    public FileChooserWidget(Consumer<FileChooserWidgetProps> config) {
+        props.self = this;
+        config.accept(props);
     }
 
     @Override
@@ -48,6 +56,8 @@ public class FileChooserWidget implements Widget {
 
         // build file text field
         fileTextField = new JTextField();
+        if (props.initialFile != null)
+            fileTextField.setText(props.initialFile.toAbsolutePath().toString());
 
         // build file chooser button
         fileChooserButton = new JButton();
@@ -84,9 +94,11 @@ public class FileChooserWidget implements Widget {
             public void changedUpdate(DocumentEvent e) {
                 pathChanged();
             }
+
             public void removeUpdate(DocumentEvent e) {
                 pathChanged();
             }
+
             public void insertUpdate(DocumentEvent e) {
                 pathChanged();
             }
@@ -98,22 +110,27 @@ public class FileChooserWidget implements Widget {
 
             // we can invert control here, and delegate to a prop
             // that would be the choose file strategy.
-            if (props.mode == FileChooserMode.OPEN) {
-                // this is a hard dependency now on the Windows File Chooser...
-                Path selectedFile = new WindowsFileChooser()
-                    .withInitialFile(state.path)
-                    .showOpenFileDialog();
+            // this is a hard dependency now on the Windows File Chooser...
 
-                // this is where we would probably rebuild the ui...
-                if (selectedFile != null) {
-                    if (Files.exists(selectedFile)) {
-                        state.path = selectedFile;
-                        fileTextField.setText(selectedFile.toString());
-                    } else {
-                        throw new RuntimeException("File does not exist " + selectedFile);
-                    }
+            if (props.fileChoiceStrategy == null)
+                return;
+
+            Path selectedFile = props.fileChoiceStrategy.get();
+
+            // this is where we would probably rebuild the ui...
+            if (selectedFile != null) {
+                if (Files.exists(selectedFile)) {
+                    state.path = selectedFile;
+                    fileTextField.setText(selectedFile.toString());
+                } else {
+                    throw new RuntimeException("File does not exist " + selectedFile);
                 }
             }
+
+//            new WindowsFileChooser()
+//                .withInitialFile(state.path)
+//                .withGuiParent(widgetPanel)
+//                .getFile();
         });
     }
 
@@ -122,8 +139,10 @@ public class FileChooserWidget implements Widget {
         state.path = Paths.get(fileTextField.getText());
     }
 
-    private static class FileChooserWidgetProps {
-        private FileChooserMode mode = FileChooserMode.OPEN;
+    public static class FileChooserWidgetProps {
+        FileChooserWidget self;
+        Path initialFile;
+        Supplier<Path> fileChoiceStrategy;
     }
 
     public enum FileChooserMode {
@@ -138,5 +157,9 @@ public class FileChooserWidget implements Widget {
          * or put there by the popout file chooser window.
          */
         public Path path;
+    }
+
+    public FileChooserWidgetState getState() {
+        return state;
     }
 }

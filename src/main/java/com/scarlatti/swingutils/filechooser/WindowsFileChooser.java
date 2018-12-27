@@ -20,6 +20,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 
 
 /**
@@ -27,10 +28,10 @@ import java.util.List;
  * <p>
  * Example:
  * WindowsFileChooser fc = new WindowsFileChooser("C:\\");
- * fc.withFilter("All Files", "*");
- * fc.withFilter("Text files", "txt", "log", "xml", "css", "html");
- * fc.withFilter("Source code", "java", "c", "cpp", "cc", "h", "hpp");
- * fc.withFilter("Binary files", "exe", "class", "jar", "dll", "so");
+ * fc.addFilter("All Files", "*");
+ * fc.addFilter("Text files", "txt", "log", "xml", "css", "html");
+ * fc.addFilter("Source code", "java", "c", "cpp", "cc", "h", "hpp");
+ * fc.addFilter("Binary files", "exe", "class", "jar", "dll", "so");
  * if (fc.showOpenFileDialogInternal(parent)) {
  * File f = fc.getSelectedFile();
  * // do something with f
@@ -75,79 +76,70 @@ import java.util.List;
  * to override this behaviour.
  */
 public class WindowsFileChooser {
-    private List<FileExtensionFilter> filters;
+    private WindowsFileChooserProps props = new WindowsFileChooserProps();
 
-    private Path initialPath;
-    private String initialDirectory;
-    private String title;
-
-    private boolean validateFileExists;
-
-    private Window parent;
-    private Container parentComponent;
-
-    /**
-     * creates a new file chooser
-     */
     public WindowsFileChooser() {
-        filters = new ArrayList<>();
     }
 
-    public WindowsFileChooser withInitialFile(Path initialFile) {
-        this.initialPath = initialFile;
-        return this;
+    public WindowsFileChooser(WindowsFileChooserProps props) {
+        this.props = props;
     }
 
-    public WindowsFileChooser withTitle(String title) {
-        this.title = title;
-        return this;
+    public WindowsFileChooser(Consumer<WindowsFileChooserProps> config) {
+        config.accept(props);
     }
 
-    public WindowsFileChooser withGuiParent(Window parent) {
-        this.parent = parent;
-        return this;
-    }
+    public static class WindowsFileChooserProps {
+        private List<FileExtensionFilter> filters = new ArrayList<>();
+        public Path initialFile;
+        public String title;
+        private Window parent;
+        public Mode mode = Mode.OPEN;
 
-    public WindowsFileChooser withGuiParent(Container component) {
-        this.parent = SwingUtilities.getWindowAncestor(component);
-        this.parentComponent = component;
-        return this;
-    }
-
-    /**
-     * add a filter to the user-selectable list of file filters
-     *
-     * @param filter you must pass at least 2 arguments, the first argument
-     *               is the name of this filter and the remaining arguments
-     *               are the file extensions.  For example, to select only .txt files
-     *               you might pass {"Text Files (*.txt)", "txt"}, note the absence of the period
-     *               in the file extensions.
-     */
-    public WindowsFileChooser withFilter(String... filter) {
-        if (filter.length < 2) {
-            throw new IllegalArgumentException();
+        public void setGuiParent(Container component) {
+            parent = SwingUtilities.getWindowAncestor(component);
         }
 
-        FileExtensionFilter newFilter = new FileExtensionFilter();
-        newFilter.description = filter[0];
-        newFilter.patterns = Arrays.asList(filter).subList(1, filter.length);
-        filters.add(newFilter);
+        /**
+         * add a filter to the user-selectable list of file filters
+         *
+         * @param filter you must pass at least 2 arguments, the first argument
+         *               is the name of this filter and the remaining arguments
+         *               are the file extensions.  For example, to select only .txt files
+         *               you might pass {"Text Files (*.txt)", "txt"}, note the absence of the period
+         *               in the file extensions.
+         */
+        public void addFilter(String... filter) {
+            if (filter.length < 2) {
+                throw new IllegalArgumentException();
+            }
 
-        return this;
+            FileExtensionFilter newFilter = new FileExtensionFilter();
+            newFilter.description = filter[0];
+            newFilter.patterns = Arrays.asList(filter).subList(1, filter.length);
+            filters.add(newFilter);
+        }
+
+        public enum Mode {
+            OPEN,
+            SAVE
+        }
+    }
+
+    private static class FileExtensionFilter {
+        String description;
+        List<String> patterns = new ArrayList<>();
     }
 
     /**
      * @return the selected file, or null if no file selected
      */
-    public Path showOpenFileDialog() {
-        return showDialog(parent, true);
-    }
+    public Path getFile() {
+        boolean isOpenMode = true;
+        if (props.mode == WindowsFileChooserProps.Mode.SAVE)
+            isOpenMode = false;
 
-    /**
-     * @return the selected file, or null if no file selected
-     */
-    public Path showSaveFileDialog() {
-        return showDialog(parent, false);
+        return showDialog(props.parent, isOpenMode);
     }
 
     /**
@@ -198,32 +190,32 @@ public class WindowsFileChooser {
         params.nMaxFile = maxFileNameLength;
 
         // build filter string if filters were specified
-        if (filters.size() > 0) {
+        if (props.filters.size() > 0) {
             params.lpstrFilter = new WString(buildFilterString());
             params.nFilterIndex = 1;
         }
 
         // now set the initial file or directory
-        if (initialPath != null) {
-            if (Files.isDirectory(initialPath)) {
+        if (props.initialFile != null) {
+            if (Files.isDirectory(props.initialFile)) {
 
-                String initialDir = initialPath.toAbsolutePath().toString();
+                String initialDir = props.initialFile.toAbsolutePath().toString();
 
                 int lpstrInitialDirBufferLength = 4 * initialDir.getBytes().length + 1;
                 params.lpstrInitialDir = new Memory(lpstrInitialDirBufferLength);
                 params.lpstrInitialDir.clear(lpstrInitialDirBufferLength);
                 params.lpstrInitialDir.setWideString(0L, initialDir);
             } else {
-                String initialFile = this.initialPath.toAbsolutePath().toString();
+                String initialFile = props.initialFile.toAbsolutePath().toString();
                 params.lpstrFile.setWideString(0L, initialFile);
             }
         }
 
-        if (title != null) {
-            int buffer = 4 * title.getBytes().length + 1;
+        if (props.title != null) {
+            int buffer = 4 * props.title.getBytes().length + 1;
             params.lpstrTitle = new Memory(buffer);
             params.lpstrTitle.clear(buffer);
-            params.lpstrTitle.setWideString(0L, title);
+            params.lpstrTitle.setWideString(0L, props.title);
         }
 
 
@@ -276,7 +268,7 @@ public class WindowsFileChooser {
     private String buildFilterString() {
 
         final StringBuilder allFiltersStr = new StringBuilder();
-        for (FileExtensionFilter filter : filters) {
+        for (FileExtensionFilter filter : props.filters) {
             String filterStr = filter.description + "\0" + String.join(";", filter.patterns) + "\0";
             allFiltersStr.append(filterStr);
         }
@@ -288,7 +280,7 @@ public class WindowsFileChooser {
     }
 
     private Path postProcessSelectedFileForSaving(Path selectedFile, Comdlg32Params params) {
-        if (filters.size() == 0)
+        if (props.filters.size() == 0)
             return selectedFile;
 
         FileExtensionFilter selectedFilter = getSelectedFilter(params);
@@ -318,12 +310,7 @@ public class WindowsFileChooser {
     }
 
     private FileExtensionFilter getSelectedFilter(Comdlg32Params params) {
-        return filters.get(params.nFilterIndex - 1);
-    }
-
-    private static class FileExtensionFilter {
-        String description;
-        List<String> patterns = new ArrayList<>();
+        return props.filters.get(params.nFilterIndex - 1);
     }
 
     /**
