@@ -3,11 +3,14 @@ package com.scarlatti.swingutils.wizard;
 import com.scarlatti.swingutils.SwingUtils;
 import com.scarlatti.swingutils.filechooser.FileChooserWidget;
 import com.scarlatti.swingutils.filechooser.FileChoosers;
-import com.scarlatti.swingutils.wizard.WizardWidget;
+import com.scarlatti.swingutils.grid.RowsWidget;
+import com.scarlatti.swingutils.text.JMultilineLabel;
+import com.scarlatti.swingutils.text.MultilineTextWidget;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.swing.*;
+import java.awt.*;
 
 /**
  * @author Alessandro Scarlatti
@@ -23,38 +26,58 @@ public class WizardWidgetTest {
     @Test
     public void createWidget() {
         SwingUtils.display(() -> {
-//             create "content"
-            JPanel wizardContent = new JPanel();
-            GroupLayout gl = new GroupLayout(wizardContent);
-            wizardContent.setLayout(gl);
-//
-//            // file chooser
             FileChooserWidget fileChooserWidget1 = FileChoosers.openFileWidget();
             FileChooserWidget fileChooserWidget2 = FileChoosers.saveFileWidget();
             JButton jButton = new JButton("OK");
-//
-            // configure layout
-            gl.setAutoCreateGaps(true);
-            gl.setAutoCreateContainerGaps(true);
 
-            GroupLayout.ParallelGroup widgetHGroup = gl
-                .createParallelGroup()
-                .addComponent(fileChooserWidget1.getUi())
-                .addComponent(fileChooserWidget2.getUi())
-                .addComponent(jButton);
-
-            GroupLayout.SequentialGroup widgetVGroup = gl
-                .createSequentialGroup()
-                .addComponent(fileChooserWidget1.getUi())
-                .addComponent(fileChooserWidget2.getUi())
-                .addComponent(jButton);
-
-            gl.setHorizontalGroup(widgetHGroup);
-            gl.setVerticalGroup(widgetVGroup);
+            RowsWidget wizardContent = new RowsWidget(_rowsWidget -> {
+                _rowsWidget.addRow(fileChooserWidget1.getUi());
+                _rowsWidget.addRow(fileChooserWidget2.getUi());
+                _rowsWidget.addRow(jButton);
+            });
 
             WizardWidget wizardWidget = new WizardWidget(wizard -> {
-                wizard.wizardContent = wizardContent;
-                wizard.title = "stuff and things";
+                wizard.wizardContent = wizardContent.getUi();
+                wizard.title = "Install Stuff and Things";
+//                wizard.icon = SwingUtils.createScaledIconFromResource("/com/scarlatti/javafxdemo/wrench-icon-22.png", ICON_SCALE_63);
+//                wizard.icon = SwingUtils.createScaledIconFromResource("/com/scarlatti/javafxdemo/wrench-flat.png", ICON_SCALE_63);
+//                wizard.icon = SwingUtils.createScaledIcon(getWizardIconBase64String(), ICON_SCALE_63);
+            });
+
+            return wizardWidget.getUi();
+        });
+    }
+
+    @Test
+    public void createWidgetWithText() {
+        SwingUtils.display(() -> {
+
+            String text = "This is a bunch of text\n\n" +
+                "It is really, really long.\n" +
+                "It is really, really long.\n" +
+                "It is really, really long.\n" +
+                "It is really, really long.\n" +
+                "It is really, really long.\n\n" +
+                "It is really, really long.\n" +
+                "It is really, really long.\n" +
+                "It is really, really long.\n" +
+                "It is really, really long.\n\n" +
+                "It really, really is.";
+
+            RowsWidget wizardContent = new RowsWidget(rowsWidget -> {
+                rowsWidget.addRow(new MultilineTextWidget(text).getUi());
+                rowsWidget.addRow(new MultilineTextWidget(text).getUi());
+                rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
+                rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
+                rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
+                rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
+                rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
+                rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
+            });
+
+            WizardWidget wizardWidget = new WizardWidget(wizard -> {
+                wizard.wizardContent = wizardContent.getUi();
+                wizard.title = "Install Stuff and Things";
             });
 
             return wizardWidget.getUi();

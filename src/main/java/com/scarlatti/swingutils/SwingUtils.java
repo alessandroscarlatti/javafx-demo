@@ -6,6 +6,7 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Supplier;
@@ -52,6 +53,16 @@ public class SwingUtils {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
             throw new RuntimeException("Error setting system look and feel", e);
+        }
+    }
+
+    public static Icon createScaledIconFromResource(String resourcePath, IconScale iconScale) {
+        try {
+            Image image = ImageIO.read(SwingUtils.class.getResourceAsStream(resourcePath));
+            Image scaledImage = image.getScaledInstance(iconScale.size, iconScale.size, Image.SCALE_SMOOTH);
+            return new ImageIcon(scaledImage);
+        } catch (Exception e) {
+            throw new RuntimeException("Error reading image from resource " + resourcePath);
         }
     }
 
