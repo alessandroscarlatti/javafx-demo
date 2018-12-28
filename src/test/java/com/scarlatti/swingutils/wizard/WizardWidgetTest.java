@@ -4,13 +4,11 @@ import com.scarlatti.swingutils.SwingUtils;
 import com.scarlatti.swingutils.filechooser.FileChooserWidget;
 import com.scarlatti.swingutils.filechooser.FileChoosers;
 import com.scarlatti.swingutils.grid.RowsWidget;
-import com.scarlatti.swingutils.text.JMultilineLabel;
 import com.scarlatti.swingutils.text.MultilineTextWidget;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.swing.*;
-import java.awt.*;
 
 /**
  * @author Alessandro Scarlatti
