@@ -4,6 +4,7 @@ import com.scarlatti.swingutils.SwingUtils;
 import com.scarlatti.swingutils.filechooser.FileChooserWidget;
 import com.scarlatti.swingutils.filechooser.FileChoosers;
 import com.scarlatti.swingutils.grid.RowsWidget;
+import com.scarlatti.swingutils.progressbar.ProgressBarWidget;
 import com.scarlatti.swingutils.text.MultilineTextWidget;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -71,6 +72,7 @@ public class WizardWidgetTest {
                 rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
                 rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
                 rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
+                rowsWidget.addRow(new ProgressBarWidget().getUi());
             });
 
             WizardWidget wizardWidget = new WizardWidget(wizard -> {
