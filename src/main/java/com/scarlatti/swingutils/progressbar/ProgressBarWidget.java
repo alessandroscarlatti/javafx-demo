@@ -5,6 +5,8 @@ import com.scarlatti.swingutils.Widget;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.util.Objects;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 /**
@@ -16,16 +18,21 @@ public class ProgressBarWidget implements Widget {
     private JProgressBar progressBar;
     private JPanel widgetPanel;
     private JButton statusButton;
+    private ProgressBarTemplate progressBarTemplate = new ProgressBarTemplate(this);
+    private ExecutorService executor = Executors.newFixedThreadPool(3);
 
-    ProgressBarWidgetProps props = new ProgressBarWidgetProps();
     private ProgressBarWidgetState state = new ProgressBarWidgetState();
 
     private ActionListener startActionListener = e -> {
-        props.onStarted.run();
+        executor.execute(() -> {
+            progressBarTemplate.invokeWorkWithProgressBar();
+        });
     };
 
     private ActionListener cancelActionListener = e -> {
-        props.onCancelled.run();
+        executor.execute(() -> {
+            progressBarTemplate.cancel();
+        });
     };
 
     public ProgressBarWidget() {
@@ -42,7 +49,7 @@ public class ProgressBarWidget implements Widget {
      */
     public void setProgress(float progressPercent) {
         state.progressPercent = progressPercent;
-        progressBar.setValue((int) (progressPercent * 1000));
+        progressBar.setValue((int) (progressPercent * 10000));
     }
 
     public void inProgress() {
@@ -85,7 +92,7 @@ public class ProgressBarWidget implements Widget {
 
     private void initUi() {
         widgetPanel = new JPanel();
-        progressBar = new JProgressBar(0, 1000);
+        progressBar = new JProgressBar(0, 10000);
         progressBar.setValue(4);
 
 //        JPanel progressBarPanel = new JPanel(new BorderLayout());
@@ -152,9 +159,12 @@ public class ProgressBarWidget implements Widget {
         }
     }
 
-    public static class ProgressBarWidgetProps {
-        Runnable onCancelled = () -> {};
-        Runnable onStarted = () -> {};
+    public ProgressBarTemplate getProgressBarTemplate() {
+        return progressBarTemplate;
+    }
+
+    public void setProgressBarTemplate(ProgressBarTemplate progressBarTemplate) {
+        this.progressBarTemplate = progressBarTemplate;
     }
 
     private enum TaskState {
@@ -169,5 +179,188 @@ public class ProgressBarWidget implements Widget {
     private static class ProgressBarWidgetState {
         TaskState taskState = TaskState.PENDING;
         float progressPercent = 0.0f;
+    }
+
+    public static class ProgressBarTemplate {
+
+        private ExecutorService executor = Executors.newFixedThreadPool(4);
+
+        private Future workTask;
+        private Future paintTask;
+        private ProgressBarWidget progressBarWidget;
+        private long expectedDurationMs = 5000;
+        private long maxDurationMs = 30000;
+        private Runnable runnableWork = this::doRunnableWork;
+        private Callable<?> callableWork = this::doCallableWork;
+
+        public void setExpectedDurationMs(long expectedDurationMs) {
+            this.expectedDurationMs = expectedDurationMs;
+        }
+
+        public void setMaxDurationMs(long maxDurationMs) {
+            this.maxDurationMs = maxDurationMs;
+        }
+
+        public void setWork(Runnable runnableWork) {
+            this.runnableWork = runnableWork;
+            this.callableWork = null;
+        }
+
+        public void setWork(Callable<?> callableWork) {
+            this.callableWork = callableWork;
+            this.runnableWork = null;
+        }
+
+        public ProgressBarTemplate() {
+        }
+
+        public ProgressBarTemplate(ProgressBarWidget progressBarWidget) {
+            this.progressBarWidget = progressBarWidget;
+        }
+
+        public ProgressBarTemplate(Consumer<ProgressBarTemplate> config) {
+            config.accept(this);
+        }
+
+        void setProgressBarWidget(ProgressBarWidget progressBarWidget) {
+            this.progressBarWidget = progressBarWidget;
+        }
+
+        public void cancel() {
+            paintTask.cancel(true);
+            workTask.cancel(true);
+
+            SwingUtilities.invokeLater(() -> {
+                progressBarWidget.cancelled();
+            });
+        }
+
+        /**
+         * Blocking call.
+         *
+         * @return the result of this work, if any.
+         * @throws any exceptions thrown by the underlying invocation of the work.
+         */
+        public Object invokeWorkWithProgressBar() {
+            Objects.requireNonNull(progressBarWidget, "Must be attached to a progress bar.");
+            try {
+                // update the state so we look like we are working!
+                progressBarWidget.inProgress();
+
+                // start the paint task
+                paintTask = executor.submit(this::paintProgressBar);
+
+                // start the work task, either runnable or callable
+                if (runnableWork != null) {
+                    workTask = executor.submit(runnableWork);
+                } else if (callableWork != null) {
+                    workTask = executor.submit(callableWork);
+                }
+
+                // wait for the work task to finish
+                Object result = workTask.get(maxDurationMs, TimeUnit.MILLISECONDS);
+                onComplete();
+                return result;
+            } catch (CancellationException e) {
+                onCancelled();
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                onInterrupted();
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                onError();
+                throw new RuntimeException(e);
+            } catch (TimeoutException e) {
+                onTimeout();
+                throw new RuntimeException(e);
+            }
+        }
+
+        void doRunnableWork() {
+            // nothing by default
+        }
+
+        Object doCallableWork() {
+            return null;
+        }
+
+        void onComplete() {
+            SwingUtilities.invokeLater(() -> {
+                paintTask.cancel(true);
+                progressBarWidget.setProgress(1f);
+                progressBarWidget.complete();
+            });
+        }
+
+        void onCancelled() {
+            SwingUtilities.invokeLater(() -> {
+                paintTask.cancel(true);
+                progressBarWidget.setProgress(1f);
+                progressBarWidget.cancelled();
+            });
+        }
+
+        void onInterrupted() {
+            SwingUtilities.invokeLater(() -> {
+                paintTask.cancel(true);
+                progressBarWidget.setProgress(1f);
+                progressBarWidget.error();
+            });
+        }
+
+        void onError() {
+            SwingUtilities.invokeLater(() -> {
+                paintTask.cancel(true);
+                progressBarWidget.setProgress(1f);
+                progressBarWidget.error();
+            });
+        }
+
+        void onTimeout() {
+            SwingUtilities.invokeLater(() -> {
+                paintTask.cancel(true);
+                progressBarWidget.setProgress(1f);
+                progressBarWidget.timeout();
+            });
+        }
+
+        /**
+         * This is the paint thread.
+         */
+        void paintProgressBar() {
+            long durationMs = expectedDurationMs;
+            long refreshRateMs = 30;
+            float resolution = 1.0f / (float) (durationMs / refreshRateMs);  // need to count from 0 to 1 in durationMs
+            float fallbackPercent = 0.4f;  // if we are still going, go back to the fallback percent.
+
+            SwingUtilities.invokeLater(() -> {
+                progressBarWidget.setProgress(0.0f);
+            });
+
+            // this is an intentional infinite loop
+            for (float progressPercent = 0.0f; ; progressPercent += resolution) {
+                final float progressPercentToPaint = progressPercent;
+                SwingUtilities.invokeLater(() -> {
+                    progressBarWidget.setProgress(progressPercentToPaint);
+                });
+
+                try {
+                    // if this thread is interrupted, an interrupted exception will be thrown here.
+                    Thread.sleep(refreshRateMs);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+                // determine if we need to fall back and start over
+                if (progressPercent >= 1.0f) {
+                    fallbackPercent = fallbackPercent * 0.7f;  // go back to the fallback
+                    progressPercent = fallbackPercent;
+                    durationMs += durationMs;
+
+                    // recalculate how much we will bump the progress each iteration
+                    resolution = 1.0f / (float) (durationMs / refreshRateMs);
+                }
+            }
+        }
     }
 }
