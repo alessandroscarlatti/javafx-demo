@@ -50,19 +50,7 @@ public class ProgressBarWidgetTest {
 
         SwingUtils.display(() -> {
             JPanel jPanel = new JPanel();
-
-            JButton jButton = new JButton("Execute Task");
-            jButton.addActionListener((e -> {
-                Executors.newFixedThreadPool(1).execute(() -> {
-                    String result = progressBarWidget.getProgressBarTemplate().execute(() -> {
-                        sleep(2000);
-                        return "asdf";
-                    });
-
-                    System.out.println(result);
-                });
-            }));
-            jPanel.add(jButton);
+            jPanel.add(buttonForTriggeringProgressBarTask(progressBarWidget));
             jPanel.add(progressBarWidget.getUi());
             return jPanel;
         });
@@ -91,6 +79,78 @@ public class ProgressBarWidgetTest {
             jPanel.add(progressBarWidget.getUi());
             return jPanel;
         });
+    }
+
+    @Test
+    public void progressBarWithNonSelfStartableTask() {
+        ProgressBarWidget progressBarWidget = new ProgressBarWidget(widget -> {
+            widget.setSelfStartable(false);
+            widget.getProgressBarTemplate().setWork(() -> {
+                sleep(2000);
+                return "asdf";
+            });
+        });
+
+        SwingUtils.display(() -> {
+            JPanel jPanel = new JPanel();
+            jPanel.add(buttonForTriggeringProgressBarTask(progressBarWidget));
+            jPanel.add(progressBarWidget.getUi());
+            return jPanel;
+        });
+    }
+
+    @Test
+    public void progressBarWithRepeatableTask() {
+        ProgressBarWidget progressBarWidget = new ProgressBarWidget(widget -> {
+            widget.setSelfStartable(false);
+            widget.setRepeatable(true);
+            widget.getProgressBarTemplate().setWork(() -> {
+                sleep(2000);
+                return "asdf";
+            });
+        });
+
+        SwingUtils.display(() -> {
+            JPanel jPanel = new JPanel();
+            jPanel.add(buttonForTriggeringProgressBarTask(progressBarWidget));
+            jPanel.add(progressBarWidget.getUi());
+            return jPanel;
+        });
+    }
+
+
+    @Test
+    public void progressBarWithNonCancelableTask() {
+        ProgressBarWidget progressBarWidget = new ProgressBarWidget(widget -> {
+            widget.setSelfStartable(true);
+            widget.setRepeatable(true);
+            widget.setCancelable(false);
+            widget.getProgressBarTemplate().setMaxDurationMs(1000);
+            widget.getProgressBarTemplate().setWork(() -> {
+                sleep(2000);
+                return "asdf";
+            });
+        });
+
+        SwingUtils.display(() -> {
+            JPanel jPanel = new JPanel();
+            jPanel.add(progressBarWidget.getUi());
+            return jPanel;
+        });
+    }
+
+    private JButton buttonForTriggeringProgressBarTask(ProgressBarWidget progressBarWidget) {
+        JButton jButton = new JButton("Execute Task");
+        jButton.addActionListener((e -> {
+            Executors.newFixedThreadPool(1).execute(() -> {
+                progressBarWidget.getProgressBarTemplate().execute(() -> {
+                    sleep(2000);
+                });
+                System.out.println("done");
+            });
+        }));
+
+        return jButton;
     }
 
     private static void sleep(long ms) {

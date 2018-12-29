@@ -1,8 +1,12 @@
 package com.scarlatti.swingutils.progressbar;
 
 import com.scarlatti.swingutils.Widget;
+import javafx.scene.control.ProgressBar;
 
 import javax.swing.*;
+import javax.swing.plaf.ProgressBarUI;
+import javax.swing.plaf.basic.BasicProgressBarUI;
+import javax.swing.plaf.multi.MultiProgressBarUI;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.Objects;
@@ -17,10 +21,19 @@ import java.util.function.Consumer;
 public class ProgressBarWidget implements Widget {
 
     private JProgressBar progressBar;
+    private ProgressBarUI normalProgressBarUi;
+    private ProgressBarUI errorProgressBarUi;
+    private ProgressBarUI successProgressBarUi;
     private JPanel widgetPanel;
     private JButton statusButton;
     private ProgressBarTemplate progressBarTemplate = new ProgressBarTemplate(this);
     private ExecutorService executor = Executors.newFixedThreadPool(3);
+    private GroupLayout gl;
+
+    private boolean selfStartable = true;
+    private boolean retryable = true;
+    private boolean repeatable = false;
+    private boolean cancelable = true;
 
     private ProgressBarWidgetState state = new ProgressBarWidgetState();
 
@@ -96,6 +109,20 @@ public class ProgressBarWidget implements Widget {
         progressBar = new JProgressBar(0, 10000);
         progressBar.setValue(4);
 
+        normalProgressBarUi = progressBar.getUI();
+        errorProgressBarUi = new BasicProgressBarUI() {
+            @Override
+            protected Color getSelectionForeground() {
+                return Color.RED;
+            }
+        };
+        successProgressBarUi = new BasicProgressBarUI() {
+            @Override
+            protected Color getSelectionForeground() {
+                return Color.decode("#4DB146");  // success green
+            }
+        };
+
 //        JPanel progressBarPanel = new JPanel(new BorderLayout());
 //        progressBarPanel.add(progressBar, BorderLayout.CENTER);
 //        progressBarPanel.setMaximumSize(new Dimension(Short.MAX_VALUE, 31));
@@ -108,7 +135,7 @@ public class ProgressBarWidget implements Widget {
 
         statusButton = new JButton();
 
-        GroupLayout gl = new GroupLayout(widgetPanel);
+        gl = new GroupLayout(widgetPanel);
         widgetPanel.setLayout(gl);
 
         gl.setAutoCreateGaps(true);
@@ -129,33 +156,91 @@ public class ProgressBarWidget implements Widget {
     private void configureByState() {
         statusButton.removeActionListener(startActionListener);
         statusButton.removeActionListener(cancelActionListener);
+        progressBar.setBorderPainted(true);
+        progressBar.setStringPainted(false);
+        progressBar.setString("");
+        progressBar.setForeground(null);  // this is actually the background.
+        progressBar.setUI(normalProgressBarUi);
 
         switch (state.taskState) {
             case PENDING:
                 statusButton.setText("Start");
                 statusButton.setEnabled(true);
                 statusButton.addActionListener(startActionListener);
+                statusButton.setVisible(selfStartable);
                 break;
             case IN_PROGRESS:
-                statusButton.setText("Cancel");
-                statusButton.setEnabled(true);
-                statusButton.addActionListener(cancelActionListener);
+                statusButton.setVisible(true);
+                if (cancelable) {
+                    statusButton.setText("Cancel");
+                    statusButton.setEnabled(true);
+                    statusButton.addActionListener(cancelActionListener);
+                } else {
+                    statusButton.setText("Working...");
+                    statusButton.setEnabled(false);
+                }
                 break;
             case TIMEOUT:
-                statusButton.setText("Timed out");
-                statusButton.setEnabled(false);
+                statusButton.setVisible(true);
+                if (retryable) {
+                    statusButton.setText("Try Again");
+                    statusButton.setEnabled(true);
+                    statusButton.addActionListener(startActionListener);
+                    progressBar.setStringPainted(true);
+                    progressBar.setString("Timed out.");
+                    progressBar.setUI(errorProgressBarUi);
+                    progressBar.setForeground(UIManager.getColor("ProgressBar.selectionForeground"));
+                } else {
+                    statusButton.setText("Timed out");
+                    statusButton.setEnabled(false);
+                }
                 break;
             case CANCELLED:
-                statusButton.setText("Canceled");
-                statusButton.setEnabled(false);
+                statusButton.setVisible(true);
+                if (retryable) {
+                    statusButton.setText("Try Again");
+                    statusButton.setEnabled(true);
+                    statusButton.addActionListener(startActionListener);
+                    progressBar.setStringPainted(true);
+                    progressBar.setString("Cancelled.");
+                    progressBar.setUI(errorProgressBarUi);
+                    progressBar.setForeground(UIManager.getColor("ProgressBar.selectionForeground"));
+                } else {
+                    statusButton.setText("Cancelled");
+                    statusButton.setEnabled(false);
+                }
                 break;
             case FAILED:
-                statusButton.setText("Failed");
-                statusButton.setEnabled(false);
+                statusButton.setVisible(true);
+                if (retryable) {
+                    statusButton.setText("Failed. Try Again");
+                    statusButton.setEnabled(true);
+                    statusButton.addActionListener(startActionListener);
+                    progressBar.setStringPainted(true);
+                    progressBar.setString("Failed.");
+                    progressBar.setUI(errorProgressBarUi);
+                    progressBar.setForeground(UIManager.getColor("ProgressBar.selectionForeground"));
+                } else {
+                    statusButton.setText("Failed");
+                    statusButton.setEnabled(false);
+                }
                 break;
             case COMPLETE:
-                statusButton.setText("Complete");
-                statusButton.setEnabled(false);
+                progressBar.setStringPainted(true);
+                progressBar.setString("Complete.");
+                progressBar.setUI(successProgressBarUi);
+                progressBar.setForeground(UIManager.getColor("ProgressBar.selectionForeground"));
+
+                if (repeatable) {
+                    statusButton.setVisible(true);
+                    statusButton.setText("Do Again");
+                    statusButton.setEnabled(true);
+                    statusButton.addActionListener(startActionListener);
+                    statusButton.setVisible(true);
+                } else {
+                    statusButton.setVisible(false);
+                }
+
                 break;
         }
     }
@@ -166,6 +251,22 @@ public class ProgressBarWidget implements Widget {
 
     public void setProgressBarTemplate(ProgressBarTemplate progressBarTemplate) {
         this.progressBarTemplate = progressBarTemplate;
+    }
+
+    public void setSelfStartable(boolean selfStartable) {
+        this.selfStartable = selfStartable;
+    }
+
+    public void setRetryable(boolean retryable) {
+        this.retryable = retryable;
+    }
+
+    public void setCancelable(boolean cancelable) {
+        this.cancelable = cancelable;
+    }
+
+    public void setRepeatable(boolean repeatable) {
+        this.repeatable = repeatable;
     }
 
     private enum TaskState {
