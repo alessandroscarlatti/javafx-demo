@@ -6,6 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
@@ -192,6 +193,7 @@ public class ProgressBarWidget implements Widget {
         private long maxDurationMs = 30000;
         private Runnable runnableWork = this::doRunnableWork;
         private Callable<?> callableWork = this::doCallableWork;
+        private Object result = null;
 
         public void setExpectedDurationMs(long expectedDurationMs) {
             this.expectedDurationMs = expectedDurationMs;
@@ -235,6 +237,17 @@ public class ProgressBarWidget implements Widget {
             });
         }
 
+        void execute(Runnable runnableWork) {
+            setWork(runnableWork);
+            invokeWorkWithProgressBar();
+        }
+
+        @SuppressWarnings("unchecked")
+        <T> T execute(Callable<T> callableWork) {
+            setWork(callableWork);
+            return (T) invokeWorkWithProgressBar();
+        }
+
         /**
          * Blocking call.
          *
@@ -258,7 +271,7 @@ public class ProgressBarWidget implements Widget {
                 }
 
                 // wait for the work task to finish
-                Object result = workTask.get(maxDurationMs, TimeUnit.MILLISECONDS);
+                result = workTask.get(maxDurationMs, TimeUnit.MILLISECONDS);
                 onComplete();
                 return result;
             } catch (CancellationException e) {
@@ -361,6 +374,10 @@ public class ProgressBarWidget implements Widget {
                     resolution = 1.0f / (float) (durationMs / refreshRateMs);
                 }
             }
+        }
+
+        public Object getResult() {
+            return result;
         }
     }
 }
