@@ -72,7 +72,12 @@ public class WizardWidgetTest {
                 rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
                 rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
                 rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
-                rowsWidget.addRow(new ProgressBarWidget().getUi());
+                rowsWidget.addRow(new ProgressBarWidget(progressBarWidget -> {
+                    progressBarWidget.getProgressBarTemplate().setWork(() -> {
+                        SwingUtils.sleep(1000);
+                    });
+                    progressBarWidget.setRepeatable(true);
+                }).getUi());
             });
 
             WizardWidget wizardWidget = new WizardWidget(wizard -> {

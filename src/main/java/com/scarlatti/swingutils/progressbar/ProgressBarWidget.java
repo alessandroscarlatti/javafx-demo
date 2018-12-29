@@ -1,6 +1,8 @@
 package com.scarlatti.swingutils.progressbar;
 
 import com.scarlatti.swingutils.Widget;
+import com.scarlatti.swingutils.exception.ExceptionViewerWidget;
+import com.scarlatti.swingutils.text.MultilineTextWidget;
 import javafx.scene.control.ProgressBar;
 
 import javax.swing.*;
@@ -9,6 +11,15 @@ import javax.swing.plaf.basic.BasicProgressBarUI;
 import javax.swing.plaf.multi.MultiProgressBarUI;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.font.TextAttribute;
+import java.awt.geom.AffineTransform;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.*;
@@ -28,7 +39,6 @@ public class ProgressBarWidget implements Widget {
     private JButton statusButton;
     private ProgressBarTemplate progressBarTemplate = new ProgressBarTemplate(this);
     private ExecutorService executor = Executors.newFixedThreadPool(3);
-    private GroupLayout gl;
 
     private boolean selfStartable = true;
     private boolean retryable = true;
@@ -49,7 +59,23 @@ public class ProgressBarWidget implements Widget {
         });
     };
 
+    private MouseListener errorActionListener = new MouseAdapter() {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            ExceptionViewerWidget.displayModal(progressBarTemplate.getException(), widgetPanel);
+        }
+    };
+
     public ProgressBarWidget() {
+    }
+
+    public ProgressBarWidget(Runnable runnableWork) {
+        progressBarTemplate.setWork(runnableWork);
+    }
+
+
+    public ProgressBarWidget(Callable<?> callableWork) {
+        progressBarTemplate.setWork(callableWork);
     }
 
     public ProgressBarWidget(Consumer<ProgressBarWidget> config) {
@@ -115,10 +141,22 @@ public class ProgressBarWidget implements Widget {
             protected Color getSelectionForeground() {
                 return Color.RED;
             }
+
+            @Override
+            protected Color getSelectionBackground() {
+                return Color.RED;
+            }
+
+
         };
         successProgressBarUi = new BasicProgressBarUI() {
             @Override
             protected Color getSelectionForeground() {
+                return Color.decode("#4DB146");  // success green
+            }
+
+            @Override
+            protected Color getSelectionBackground() {
                 return Color.decode("#4DB146");  // success green
             }
         };
@@ -135,7 +173,7 @@ public class ProgressBarWidget implements Widget {
 
         statusButton = new JButton();
 
-        gl = new GroupLayout(widgetPanel);
+        GroupLayout gl = new GroupLayout(widgetPanel);
         widgetPanel.setLayout(gl);
 
         gl.setAutoCreateGaps(true);
@@ -156,11 +194,14 @@ public class ProgressBarWidget implements Widget {
     private void configureByState() {
         statusButton.removeActionListener(startActionListener);
         statusButton.removeActionListener(cancelActionListener);
+        progressBar.removeMouseListener(errorActionListener);
         progressBar.setBorderPainted(true);
         progressBar.setStringPainted(false);
         progressBar.setString("");
+        progressBar.setFont(null);
         progressBar.setForeground(null);  // this is actually the background.
         progressBar.setUI(normalProgressBarUi);
+        progressBar.setCursor(Cursor.getDefaultCursor());
 
         switch (state.taskState) {
             case PENDING:
@@ -188,8 +229,11 @@ public class ProgressBarWidget implements Widget {
                     statusButton.addActionListener(startActionListener);
                     progressBar.setStringPainted(true);
                     progressBar.setString("Timed out.");
+                    setUnderlineFont(progressBar);
                     progressBar.setUI(errorProgressBarUi);
                     progressBar.setForeground(UIManager.getColor("ProgressBar.selectionForeground"));
+                    progressBar.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                    progressBar.addMouseListener(errorActionListener);
                 } else {
                     statusButton.setText("Timed out");
                     statusButton.setEnabled(false);
@@ -203,8 +247,11 @@ public class ProgressBarWidget implements Widget {
                     statusButton.addActionListener(startActionListener);
                     progressBar.setStringPainted(true);
                     progressBar.setString("Cancelled.");
+                    setUnderlineFont(progressBar);
                     progressBar.setUI(errorProgressBarUi);
                     progressBar.setForeground(UIManager.getColor("ProgressBar.selectionForeground"));
+                    progressBar.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                    progressBar.addMouseListener(errorActionListener);
                 } else {
                     statusButton.setText("Cancelled");
                     statusButton.setEnabled(false);
@@ -213,13 +260,16 @@ public class ProgressBarWidget implements Widget {
             case FAILED:
                 statusButton.setVisible(true);
                 if (retryable) {
-                    statusButton.setText("Failed. Try Again");
+                    statusButton.setText("Try Again");
                     statusButton.setEnabled(true);
                     statusButton.addActionListener(startActionListener);
                     progressBar.setStringPainted(true);
                     progressBar.setString("Failed.");
+                    setUnderlineFont(progressBar);
                     progressBar.setUI(errorProgressBarUi);
                     progressBar.setForeground(UIManager.getColor("ProgressBar.selectionForeground"));
+                    progressBar.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                    progressBar.addMouseListener(errorActionListener);
                 } else {
                     statusButton.setText("Failed");
                     statusButton.setEnabled(false);
@@ -243,6 +293,12 @@ public class ProgressBarWidget implements Widget {
 
                 break;
         }
+    }
+
+    private void setUnderlineFont(JProgressBar progressBar) {
+        Map<TextAttribute, Integer> fontAttributes = new HashMap<>();
+        fontAttributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_LOW_ONE_PIXEL);
+        progressBar.setFont(progressBar.getFont().deriveFont(fontAttributes));
     }
 
     public ProgressBarTemplate getProgressBarTemplate() {
@@ -295,6 +351,7 @@ public class ProgressBarWidget implements Widget {
         private Runnable runnableWork = this::doRunnableWork;
         private Callable<?> callableWork = this::doCallableWork;
         private Object result = null;
+        private Exception exception = null;
 
         public void setExpectedDurationMs(long expectedDurationMs) {
             this.expectedDurationMs = expectedDurationMs;
@@ -356,6 +413,8 @@ public class ProgressBarWidget implements Widget {
          * @throws any exceptions thrown by the underlying invocation of the work.
          */
         public Object invokeWorkWithProgressBar() {
+            result = null;
+            exception = null;
             Objects.requireNonNull(progressBarWidget, "Must be attached to a progress bar.");
             try {
                 // update the state so we look like we are working!
@@ -376,15 +435,18 @@ public class ProgressBarWidget implements Widget {
                 onComplete();
                 return result;
             } catch (CancellationException e) {
-                onCancelled();
+                exception = e;
                 throw new RuntimeException(e);
             } catch (InterruptedException e) {
+                exception = e;
                 onInterrupted();
                 throw new RuntimeException(e);
             } catch (ExecutionException e) {
+                exception = e;
                 onError();
                 throw new RuntimeException(e);
             } catch (TimeoutException e) {
+                exception = e;
                 onTimeout();
                 throw new RuntimeException(e);
             }
@@ -479,6 +541,10 @@ public class ProgressBarWidget implements Widget {
 
         public Object getResult() {
             return result;
+        }
+
+        public Exception getException() {
+            return exception;
         }
     }
 }

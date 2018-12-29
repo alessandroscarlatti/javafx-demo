@@ -44,6 +44,25 @@ public class ProgressBarWidgetTest {
     }
 
     @Test
+    public void progressBarWithLongTask() {
+        ProgressBarWidget progressBarWidget = new ProgressBarWidget(() -> {
+                sleep(4000);
+        });
+
+        SwingUtils.display(progressBarWidget::getUi);
+    }
+
+    @Test
+    public void progressBarWithFailingTask() {
+        ProgressBarWidget progressBarWidget = new ProgressBarWidget(() -> {
+            sleep(1000);
+            throw new RuntimeException("Something failed.");
+        });
+
+        SwingUtils.display(progressBarWidget::getUi);
+    }
+
+    @Test
     public void progressBarWithTaskStartedExternally() {
 
         ProgressBarWidget progressBarWidget = new ProgressBarWidget();
@@ -135,6 +154,18 @@ public class ProgressBarWidgetTest {
         SwingUtils.display(() -> {
             JPanel jPanel = new JPanel();
             jPanel.add(progressBarWidget.getUi());
+            return jPanel;
+        });
+    }
+
+    @Test
+    public void progressBarWithJLabel() {
+        // does not work!
+        SwingUtils.display(() -> {
+            JPanel jPanel = new JPanel();
+            JProgressBar jProgressBar = new JProgressBar();
+            jProgressBar.add(new JLabel("stuff and things"));
+            jPanel.add(jProgressBar);
             return jPanel;
         });
     }

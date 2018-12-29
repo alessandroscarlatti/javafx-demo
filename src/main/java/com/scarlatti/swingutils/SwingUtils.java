@@ -107,4 +107,12 @@ public class SwingUtils {
             this.size = size;
         }
     }
+
+    public static void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
