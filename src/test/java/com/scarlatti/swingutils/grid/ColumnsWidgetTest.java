@@ -34,10 +34,10 @@ public class ColumnsWidgetTest {
 //                fileChooserWidget1.getUi().setMinimumSize(new Dimension(500, 200));
 
                 _rowsWidget.addRelativeColumn(fileChooserWidget1.getUi());
-                _rowsWidget.addRelativeColumn(fileChooserWidget2.getUi());
                 _rowsWidget.addFixedColumn(
                     new MultilineTextWidget("lots of text.").getUi()
                 );
+                _rowsWidget.addRelativeColumn(fileChooserWidget2.getUi());
                 _rowsWidget.addFixedColumn(buttonWidget.getUi());
             });
 

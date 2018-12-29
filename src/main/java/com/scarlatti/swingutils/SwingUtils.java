@@ -30,6 +30,7 @@ public class SwingUtils {
         frame.setContentPane(uiComponent);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.pack();
+        frame.revalidate();
         frame.setVisible(true);
 
         CountDownLatch latch = new CountDownLatch(1);

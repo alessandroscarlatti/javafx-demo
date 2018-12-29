@@ -57,7 +57,7 @@ public class ColumnsWidget implements Widget {
         gl.setAutoCreateContainerGaps(true);
 
         GroupLayout.SequentialGroup widgetHGroup = gl.createSequentialGroup();
-        GroupLayout.ParallelGroup widgetVGroup = gl.createParallelGroup();
+        GroupLayout.ParallelGroup widgetVGroup = gl.createParallelGroup(GroupLayout.Alignment.CENTER);
 
         for (Container component : components) {
 
@@ -73,9 +73,16 @@ public class ColumnsWidget implements Widget {
 //                .addComponent(wrapper);
 //            widgetVGroup.addGroup(componentVGroup);
 
-            widgetHGroup.addComponent(component, DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE);
+            if (component instanceof JScrollPane) {
+                widgetHGroup.addComponent(component, DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, PREFERRED_SIZE);
+            } else {
+                widgetHGroup.addComponent(component, DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE);
+            }
+
             widgetVGroup.addComponent(component, 0, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE);
         }
+
+        widgetHGroup.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
 
         gl.setHorizontalGroup(widgetHGroup);
         gl.setVerticalGroup(widgetVGroup);

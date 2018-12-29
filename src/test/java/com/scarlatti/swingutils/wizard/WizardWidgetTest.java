@@ -11,6 +11,8 @@ import org.junit.Test;
 
 import javax.swing.*;
 
+import static com.scarlatti.swingutils.SwingUtils.sleep;
+
 /**
  * @author Alessandro Scarlatti
  * @since Tuesday, 12/25/2018
@@ -74,7 +76,7 @@ public class WizardWidgetTest {
                 rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
                 rowsWidget.addRow(new ProgressBarWidget(progressBarWidget -> {
                     progressBarWidget.getProgressBarTemplate().setWork(() -> {
-                        SwingUtils.sleep(1000);
+                        sleep(1000);
                     });
                     progressBarWidget.setRepeatable(true);
                 }).getUi());
@@ -86,6 +88,27 @@ public class WizardWidgetTest {
             });
 
             return wizardWidget.getUi();
+        });
+    }
+
+    @Test
+    public void theDoThisDangerousThingWizard() {
+        SwingUtils.display(() -> {
+            return new WizardWidget(wizard -> {
+                wizard.wizardContent = new RowsWidget(rowsWidget -> {
+                    rowsWidget.addRow(new MultilineTextWidget(
+                        "This is a really dangerous task that has a really long description.\n" +
+                            "It may take as long to execute this task as it does to read about it."
+                    ).getUi());
+                    rowsWidget.addRow(new ProgressBarWidget((progressBarWidget -> {
+                        progressBarWidget.setRepeatable(true);
+                        progressBarWidget.getProgressBarTemplate().setWork(() -> {
+                            sleep(3000);
+                        });
+                    })).getUi());
+                }).getUi();
+                wizard.title = "Dangerous task.";
+            }).getUi();
         });
     }
 }
