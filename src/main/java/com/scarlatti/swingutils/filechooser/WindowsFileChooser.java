@@ -9,17 +9,15 @@
  */
 package com.scarlatti.swingutils.filechooser;
 
-import com.scarlatti.swingutils.filechooser.WindowsFileChooser.Comdlg32.Comdlg32Params;
 import com.sun.jna.*;
 
-import javax.swing.*;
 import java.awt.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 
@@ -43,9 +41,9 @@ import java.util.function.Consumer;
  * <p>
  * Windows 7:
  * 1. If lpstrInitialDir has the same value as was passed the first time the
- * application used an Open or Save As dialog box, the path most recently
+ * application used an Open or Save As dialog box, the file most recently
  * selected by the user is used as the initial directory.
- * 2. Otherwise, if lpstrFile contains a path, that path is the initial
+ * 2. Otherwise, if lpstrFile contains a file, that file is the initial
  * directory.
  * 3. Otherwise, if lpstrInitialDir is not NULL, it specifies the initial
  * directory.
@@ -57,12 +55,12 @@ import java.util.function.Consumer;
  * 6. Otherwise, the initial directory is the Desktop folder.
  * <p>
  * Windows 2000/XP/Vista:
- * 1. If lpstrFile contains a path, that path is the initial directory.
+ * 1. If lpstrFile contains a file, that file is the initial directory.
  * 2. Otherwise, lpstrInitialDir specifies the initial directory.
  * 3. Otherwise, if the application has used an Open or Save As dialog box in
- * the past, the path most recently used is selected as the initial
+ * the past, the file most recently used is selected as the initial
  * directory. However, if an application is not run for a long time, its
- * saved selected path is discarded.
+ * saved selected file is discarded.
  * 4. If lpstrInitialDir is NULL and the current directory contains any files
  * of the specified filter types, the initial directory is the current
  * directory.
@@ -75,71 +73,32 @@ import java.util.function.Consumer;
  * interfere with each other. Unfortunately there doesn't seem to be a way
  * to override this behaviour.
  */
-public class WindowsFileChooser {
-    private WindowsFileChooserProps props = new WindowsFileChooserProps();
+public class WindowsFileChooser extends AbstractFileChooserWidget {
+    {
+        filters.add(
+            FileExtensionFilter.filter("All files (*.*)", "*.*")
+        );
+    }
 
     public WindowsFileChooser() {
     }
 
-    public WindowsFileChooser(WindowsFileChooserProps props) {
-        this.props = props;
+    public WindowsFileChooser(Consumer<WindowsFileChooser> config) {
+        config.accept(this);
     }
 
-    public WindowsFileChooser(Consumer<WindowsFileChooserProps> config) {
-        config.accept(props);
+    public static WindowsFileChooser dialog() {
+        return new WindowsFileChooser();
     }
 
-    public static class WindowsFileChooserProps {
-        private List<FileExtensionFilter> filters = new ArrayList<>();
-        public Path initialFile;
-        public String title;
-        private Window parent;
-        public Mode mode = Mode.OPEN;
-
-        public void setGuiParent(Container component) {
-            parent = SwingUtilities.getWindowAncestor(component);
-        }
-
-        /**
-         * add a filter to the user-selectable list of file filters
-         *
-         * @param filter you must pass at least 2 arguments, the first argument
-         *               is the name of this filter and the remaining arguments
-         *               are the file extensions.  For example, to select only .txt files
-         *               you might pass {"Text Files (*.txt)", "txt"}, note the absence of the period
-         *               in the file extensions.
-         */
-        public void addFilter(String... filter) {
-            if (filter.length < 2) {
-                throw new IllegalArgumentException();
-            }
-
-            FileExtensionFilter newFilter = new FileExtensionFilter();
-            newFilter.description = filter[0];
-            newFilter.patterns = Arrays.asList(filter).subList(1, filter.length);
-            filters.add(newFilter);
-        }
-
-        public enum Mode {
-            OPEN,
-            SAVE
-        }
+    public static WindowsFileChooser dialog(Consumer<WindowsFileChooser> config) {
+        return new WindowsFileChooser(config);
     }
 
-    private static class FileExtensionFilter {
-        String description;
-        List<String> patterns = new ArrayList<>();
-    }
-
-    /**
-     * @return the selected file, or null if no file selected
-     */
-    public Path getFile() {
-        boolean isOpenMode = true;
-        if (props.mode == WindowsFileChooserProps.Mode.SAVE)
-            isOpenMode = false;
-
-        return showDialog(props.parent, isOpenMode);
+    @Override
+    public Path doChooseFile() {
+        Objects.requireNonNull(mode, "Mode must not be null.");
+        return showWindowsFileChooserDialog(parent, mode == Mode.OPEN);
     }
 
     /**
@@ -149,8 +108,8 @@ public class WindowsFileChooser {
      * @param open   whether to show the open dialog, if false save dialog is shown
      * @return true if the user clicked ok, false otherwise
      */
-    private Path showDialog(Window parent, boolean open) {
-        final Comdlg32Params params = new Comdlg32Params();
+    private Path showWindowsFileChooserDialog(Window parent, boolean open) {
+        final Comdlg32.OpenFileNameStructure params = new Comdlg32.OpenFileNameStructure();
         params.Flags =
             // use explorer-style interface
             Comdlg32.OFN_EXPLORER
@@ -166,8 +125,8 @@ public class WindowsFileChooser {
         if (parent != null)
             params.hwndOwner = Native.getWindowPointer(parent);
 
-        // lpstrFile contains the selection path after the dialog
-        // returns. It must be big enough for the path to fit or
+        // lpstrFile contains the selection file after the dialog
+        // returns. It must be big enough for the file to fit or
         // GetOpenFileName returns an error (FNERR_BUFFERTOOSMALL).
         // MAX_PATH is 260 so 4*260+1 bytes should be big enough (I hope...)
         // http://msdn.microsoft.com/en-us/library/aa365247.aspx#maxpath
@@ -181,7 +140,7 @@ public class WindowsFileChooser {
         // http://msdn.microsoft.com/en-us/library/ms646839.aspx:
         // "The size, in characters, of the buffer pointed to by
         // lpstrFile. The buffer must be large enough to store the
-        // path and file name string or strings, including the
+        // file and file name string or strings, including the
         // terminating NULL character."
 
         // Therefore because we're using the unicode version of the
@@ -190,32 +149,31 @@ public class WindowsFileChooser {
         params.nMaxFile = maxFileNameLength;
 
         // build filter string if filters were specified
-        if (props.filters.size() > 0) {
+        if (filters.size() > 0) {
             params.lpstrFilter = new WString(buildFilterString());
             params.nFilterIndex = 1;
         }
 
         // now set the initial file or directory
-        if (props.initialFile != null) {
-            if (Files.isDirectory(props.initialFile)) {
+        if (file != null) {
+            if (Files.isDirectory(file)) {
 
-                String initialDir = props.initialFile.toAbsolutePath().toString();
+                String initialDir = file.toAbsolutePath().toString();
 
                 int lpstrInitialDirBufferLength = 4 * initialDir.getBytes().length + 1;
                 params.lpstrInitialDir = new Memory(lpstrInitialDirBufferLength);
                 params.lpstrInitialDir.clear(lpstrInitialDirBufferLength);
                 params.lpstrInitialDir.setWideString(0L, initialDir);
             } else {
-                String initialFile = props.initialFile.toAbsolutePath().toString();
-                params.lpstrFile.setWideString(0L, initialFile);
+                params.lpstrFile.setWideString(0L, file.toAbsolutePath().toString());
             }
         }
 
-        if (props.title != null) {
-            int buffer = 4 * props.title.getBytes().length + 1;
+        if (title != null) {
+            int buffer = 4 * title.getBytes().length + 1;
             params.lpstrTitle = new Memory(buffer);
             params.lpstrTitle.clear(buffer);
-            params.lpstrTitle.setWideString(0L, props.title);
+            params.lpstrTitle.setWideString(0L, title);
         }
 
 
@@ -226,7 +184,7 @@ public class WindowsFileChooser {
         if (successful) {
             final String filePath = params.lpstrFile.getString(0, true);
 
-            // we could post process the file path based on the extension if we wanted
+            // we could post process the file file based on the extension if we wanted
             // the index (1-based) is available in nFilterIndex after the dialog is closed
 
             Path selectedFile = Paths.get(filePath).toAbsolutePath();
@@ -268,8 +226,8 @@ public class WindowsFileChooser {
     private String buildFilterString() {
 
         final StringBuilder allFiltersStr = new StringBuilder();
-        for (FileExtensionFilter filter : props.filters) {
-            String filterStr = filter.description + "\0" + String.join(";", filter.patterns) + "\0";
+        for (FileExtensionFilter filter : filters) {
+            String filterStr = filter.getDescription() + "\0" + String.join(";", filter.getPatterns()) + "\0";
             allFiltersStr.append(filterStr);
         }
 
@@ -279,19 +237,18 @@ public class WindowsFileChooser {
         return allFiltersStr.toString();
     }
 
-    private Path postProcessSelectedFileForSaving(Path selectedFile, Comdlg32Params params) {
-        if (props.filters.size() == 0)
+    private Path postProcessSelectedFileForSaving(Path selectedFile, Comdlg32.OpenFileNameStructure params) {
+        if (filters.size() == 0)
             return selectedFile;
 
         FileExtensionFilter selectedFilter = getSelectedFilter(params);
 
         // if selected filter is not determinant, for example, "All Files (*.*)", we should not do anything.
-        String patternToUse = selectedFilter.patterns.get(0);
+        String patternToUse = selectedFilter.getPatterns().get(0);
         if (patternToUse.endsWith("*")) {
             // do nothing
             return selectedFile;
-        }
-        else {
+        } else {
             // if the file already ends with the selected extension, leave it.
             // otherwise, add the selected extension.
             // This assumes that it only makes sense to use one pattern for filters for saving files.
@@ -302,32 +259,62 @@ public class WindowsFileChooser {
                 // turn "myFile" and "*.txt" into "myFile.txt"
                 String newFileName = patternToUse.replace("*.", originalFileName + ".");
                 return selectedFile.getParent().resolve(newFileName);
-            }
-            else {
+            } else {
                 return selectedFile;
             }
         }
     }
 
-    private FileExtensionFilter getSelectedFilter(Comdlg32Params params) {
-        return props.filters.get(params.nFilterIndex - 1);
+    private FileExtensionFilter getSelectedFilter(Comdlg32.OpenFileNameStructure params) {
+        return filters.get(params.nFilterIndex - 1);
     }
 
     /**
      * Interface for the native Windows dialog.
      */
-    public static class Comdlg32 {
+    private static class Comdlg32 {
         static {
             Native.register("comdlg32");
         }
 
-        public static native boolean GetOpenFileNameW(Comdlg32Params params);
+        public static native boolean GetOpenFileNameW(OpenFileNameStructure params);
 
-        public static native boolean GetSaveFileNameW(Comdlg32Params params);
+        public static native boolean GetSaveFileNameW(OpenFileNameStructure params);
 
         public static native int CommDlgExtendedError();
 
-        public static class Comdlg32Params extends Structure {
+
+        /**
+         * typedef struct tagOFNA {
+         * DWORD         lStructSize;
+         * HWND          hwndOwner;
+         * HINSTANCE     hInstance;
+         * LPCSTR        lpstrFilter;
+         * LPSTR         lpstrCustomFilter;
+         * DWORD         nMaxCustFilter;
+         * DWORD         nFilterIndex;
+         * LPSTR         lpstrFile;
+         * DWORD         nMaxFile;
+         * LPSTR         lpstrFileTitle;
+         * DWORD         nMaxFileTitle;
+         * LPCSTR        lpstrInitialDir;
+         * LPCSTR        lpstrTitle;
+         * DWORD         Flags;
+         * WORD          nFileOffset;
+         * WORD          nFileExtension;
+         * LPCSTR        lpstrDefExt;
+         * LPARAM        lCustData;
+         * LPOFNHOOKPROC lpfnHook;
+         * LPCSTR        lpTemplateName;
+         * LPEDITMENU    lpEditInfo;
+         * LPCSTR        lpstrPrompt;
+         * void          *pvReserved;
+         * DWORD         dwReserved;
+         * DWORD         FlagsEx;
+         * } OPENFILENAMEA, *LPOPENFILENAMEA;
+         */
+        // must be public for JNA reflection
+        public static class OpenFileNameStructure extends Structure {
 
             public int lStructSize;
             public Pointer hwndOwner;
@@ -350,7 +337,7 @@ public class WindowsFileChooser {
             public Pointer lpfnHook;
             public Pointer lpTemplateName;
 
-            Comdlg32Params() {
+            OpenFileNameStructure() {
                 lStructSize = size();
             }
 
@@ -365,7 +352,7 @@ public class WindowsFileChooser {
             }
         }
 
-        // flags for the Comdlg32Params structure
+        // flags for the OpenFileNameStructure structure
         public final static int OFN_READONLY = 0x00000001;
         public final static int OFN_OVERWRITEPROMPT = 0x00000002;
         public static final int OFN_HIDEREADONLY = 0x00000004;
@@ -411,5 +398,115 @@ public class WindowsFileChooser {
         public static final int FNERR_SUBCLASSFAILURE = 0x3001;
         public static final int FNERR_INVALIDFILENAME = 0x3002;
         public static final int FNERR_BUFFERTOOSMALL = 0x3003;
+    }
+
+    private static class SomeDll {
+        static {
+            Native.register("user32");
+        }
+
+        /**
+         * https://docs.microsoft.com/en-us/windows/desktop/api/shlobj_core/nf-shlobj_core-shbrowseforfolderw
+         */
+        public static native boolean SHBrowseForFolderW(BrowseInfoAStructure params);
+
+        /**
+         * typedef struct _browseinfoA {
+         * HWND              hwndOwner;
+         * PCIDLIST_ABSOLUTE pidlRoot;
+         * LPSTR             pszDisplayName;
+         * LPCSTR            lpszTitle;
+         * UINT              ulFlags;
+         * BFFCALLBACK       lpfn;
+         * LPARAM            lParam;
+         * int               iImage;
+         * } BROWSEINFOA, *PBROWSEINFOA, *LPBROWSEINFOA;
+         * <p>
+         * https://docs.microsoft.com/en-us/windows/desktop/api/shlobj_core/ns-shlobj_core-_browseinfoa
+         */
+        public static class BrowseInfoAStructure extends Structure {
+
+            public Pointer hwndOwner;
+            public int pidlRoot;  // not sure about this type
+            public WString pszDisplayName;
+            public WString pszTitle;
+            public WString lpstrFilter;
+            public int ulFlags;
+            public Pointer lpfn;
+            public int iImage;
+
+            @Override
+            protected List<String> getFieldOrder() {
+                return Arrays.asList(
+                    "hwndOwner",
+                    "pidlRoot",
+                    "pszDisplayName",
+                    "lpszTitle",
+                    "ulFlags",
+                    "lpfn",
+                    "lParam",
+                    "iImage"
+                );
+            }
+
+            // 0x00000001. Only return file system directories. If the user selects folders that are not part of the file system, the OK button is grayed.
+            private static final int BIF_RETURNONLYFSDIRS = 0x00000001;
+
+            //Note  The OK button remains enabled for "\\server" items, as well as "\\server\share" and directory items. However, if the user selects a "\\server" item, passing the PIDL returned by SHBrowseForFolder to SHGetPathFromIDList fails.
+
+            //0x00000002. Do not include network folders below the domain level in the dialog box's tree view control.
+            private static final int BIF_DONTGOBELOWDOMAIN = 0x00000002;
+
+            //0x00000004. Include a status area in the dialog box. The callback function can set the status text by sending messages to the dialog box. This flag is not supported when BIF_NEWDIALOGSTYLE is specified.
+            private static final int BIF_STATUSTEXT = 0x00000004;
+
+            //0x00000008. Only return file system ancestors. An ancestor is a subfolder that is beneath the root folder in the namespace hierarchy. If the user selects an ancestor of the root folder that is not part of the file system, the OK button is grayed.
+            private static final int BIF_RETURNFSANCESTORS = 0x00000008;
+
+            //0x00000010. Version 4.71. Include an edit control in the browse dialog box that allows the user to type the name of an item.
+            private static final int BIF_EDITBOX = 0x00000010;
+
+            //    0x00000020. Version 4.71. If the user types an invalid name into the edit box, the browse dialog box calls the application's BrowseCallbackProc with the BFFM_VALIDATEFAILED message. This flag is ignored if BIF_EDITBOX is not specified.
+            private static final int BIF_VALIDATE = 0x00000020;
+
+            //    0x00000040. Version 5.0. Use the new user interface. Setting this flag provides the user with a larger dialog box that can be resized. The dialog box has several new capabilities, including: drag-and-drop capability within the dialog box, reordering, shortcut menus, new folders, delete, and other shortcut menu commands.
+            private static final int BIF_NEWDIALOGSTYLE = 0x00000040;
+
+            //    Note  If COM is initialized through CoInitializeEx with the COINIT_MULTITHREADED flag set, SHBrowseForFolder fails if BIF_NEWDIALOGSTYLE is passed.
+
+            //    0x00000080. Version 5.0. The browse dialog box can display URLs. The BIF_USENEWUI and BIF_BROWSEINCLUDEFILES flags must also be set. If any of these three flags are not set, the browser dialog box rejects URLs. Even when these flags are set, the browse dialog box displays URLs only if the folder that contains the selected item supports URLs. When the folder's IShellFolder::GetAttributesOf method is called to request the selected item's attributes, the folder must set the SFGAO_FOLDER attribute flag. Otherwise, the browse dialog box will not display the URL.
+            private static final int BIF_BROWSEINCLUDEURLS = 0x00000080;
+
+            //    BIF_USENEWUI
+            //    Version 5.0. Use the new user interface, including an edit box. This flag is equivalent to BIF_EDITBOX | BIF_NEWDIALOGSTYLE.
+            //
+            //    Note  If COM is initialized through CoInitializeEx with the COINIT_MULTITHREADED flag set, SHBrowseForFolder fails if BIF_USENEWUI is passed.
+
+            //    0x00000100. Version 6.0. When combined with BIF_NEWDIALOGSTYLE, adds a usage hint to the dialog box, in place of the edit box. BIF_EDITBOX overrides this flag.
+            private static final int BIF_UAHINT = 0x00000100;
+
+            //    0x00000200. Version 6.0. Do not include the New Folder button in the browse dialog box.
+            private static final int BIF_NONEWFOLDERBUTTON = 0x00000200;
+
+            //    0x00000400. Version 6.0. When the selected item is a shortcut, return the PIDL of the shortcut itself rather than its target.
+            private static final int BIF_NOTRANSLATETARGETS = 0x00000400;
+
+            //    0x00001000. Only return computers. If the user selects anything other than a computer, the OK button is grayed.
+            private static final int BIF_BROWSEFORCOMPUTER = 0x00001000;
+
+            //    0x00002000. Only allow the selection of printers. If the user selects anything other than a printer, the OK button is grayed.
+            private static final int BIF_BROWSEFORPRINTER = 0x00002000;
+
+            //    In Windows XP and later systems, the best practice is to use a Windows XP-style dialog, setting the root of the dialog to the Printers and Faxes folder (CSIDL_PRINTERS).
+
+            //    0x00004000. Version 4.71. The browse dialog box displays files as well as folders.
+            private static final int BIF_BROWSEINCLUDEFILES = 0x00004000;
+
+            //    0x00008000. Version 5.0. The browse dialog box can display sharable resources on remote systems. This is intended for applications that want to expose remote shares on a local system. The BIF_NEWDIALOGSTYLE flag must also be set.
+            private static final int BIF_SHAREABLE = 0x00008000;
+
+            //    0x00010000. Windows 7 and later. Allow folder junctions such as a library or a compressed file with a .zip file name extension to be browsed.
+            private static final int BIF_BROWSEFILEJUNCTIONS = 0x00010000;
+        }
     }
 }

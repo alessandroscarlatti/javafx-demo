@@ -120,4 +120,8 @@ public class SwingUtils {
             throw new RuntimeException(e);
         }
     }
+
+    public static Font makeBold(Font font) {
+        return font.deriveFont(Font.BOLD, font.getSize());
+    }
 }

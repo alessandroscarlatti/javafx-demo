@@ -2,6 +2,7 @@ package com.scarlatti.swingutils.progressbar;
 
 import com.scarlatti.swingutils.Widget;
 import com.scarlatti.swingutils.exception.ExceptionViewerWidget;
+import com.scarlatti.swingutils.text.JMultilineLabel;
 import com.scarlatti.swingutils.text.MultilineTextWidget;
 import javafx.scene.control.ProgressBar;
 
@@ -25,6 +26,8 @@ import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
+import static com.scarlatti.swingutils.SwingUtils.makeBold;
+
 /**
  * @author Alessandro Scarlatti
  * @since Thursday, 12/27/2018
@@ -44,6 +47,8 @@ public class ProgressBarWidget implements Widget {
     private boolean retryable = true;
     private boolean repeatable = false;
     private boolean cancelable = true;
+    private String title;
+    private String message;
 
     private ProgressBarWidgetState state = new ProgressBarWidgetState();
 
@@ -188,19 +193,40 @@ public class ProgressBarWidget implements Widget {
 
         statusButton = new JButton();
 
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(makeBold(titleLabel.getFont()));
+        Container messageComponent = MultilineTextWidget.ui(message);
+
         GroupLayout gl = new GroupLayout(widgetPanel);
         widgetPanel.setLayout(gl);
 
         gl.setAutoCreateGaps(true);
         gl.setAutoCreateContainerGaps(true);
 
-        GroupLayout.SequentialGroup widgetHGroup = gl.createSequentialGroup()
+        GroupLayout.ParallelGroup widgetHGroup = gl.createParallelGroup(GroupLayout.Alignment.LEADING);
+        GroupLayout.SequentialGroup widgetVGroup = gl.createSequentialGroup();
+        GroupLayout.SequentialGroup progressBarHGroup = gl.createSequentialGroup();
+        GroupLayout.ParallelGroup progressBarVGroup = gl.createParallelGroup(GroupLayout.Alignment.CENTER);
+
+        if (title != null) {
+            widgetHGroup.addComponent(titleLabel);
+            widgetVGroup.addComponent(titleLabel);
+        }
+        if (message != null) {
+            widgetHGroup.addComponent(messageComponent);
+            widgetVGroup.addComponent(messageComponent);
+        }
+
+        progressBarHGroup
             .addComponent(statusButton)
             .addComponent(progressBar);
 
-        GroupLayout.ParallelGroup widgetVGroup = gl.createParallelGroup(GroupLayout.Alignment.CENTER)
+        progressBarVGroup
             .addComponent(statusButton)
             .addComponent(progressBar);
+
+        widgetHGroup.addGroup(progressBarHGroup);
+        widgetVGroup.addGroup(progressBarVGroup);
 
         gl.setHorizontalGroup(widgetHGroup);
         gl.setVerticalGroup(widgetVGroup);
@@ -338,6 +364,14 @@ public class ProgressBarWidget implements Widget {
 
     public void setRepeatable(boolean repeatable) {
         this.repeatable = repeatable;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     private enum TaskState {

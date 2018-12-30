@@ -2,7 +2,7 @@ package com.scarlatti.swingutils.wizard;
 
 import com.scarlatti.swingutils.SwingUtils;
 import com.scarlatti.swingutils.decision.YesNoWidget;
-import com.scarlatti.swingutils.filechooser.FileChooserWidget;
+import com.scarlatti.swingutils.filechooser.FileWidget;
 import com.scarlatti.swingutils.filechooser.FileChoosers;
 import com.scarlatti.swingutils.filechooser.WindowsFileChooser;
 import com.scarlatti.swingutils.grid.RowsWidget;
@@ -14,9 +14,11 @@ import org.junit.Test;
 import javax.swing.*;
 
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import static com.scarlatti.swingutils.SwingUtils.sleep;
 import static com.scarlatti.swingutils.decision.YesNoWidget.DisplayMode.CHECKBOX;
+import static com.scarlatti.swingutils.filechooser.FileChooserWidget.FileExtensionFilter.filter;
 
 /**
  * @author Alessandro Scarlatti
@@ -32,13 +34,13 @@ public class WizardWidgetTest {
     @Test
     public void createWidget() {
         SwingUtils.display(() -> {
-            FileChooserWidget fileChooserWidget1 = FileChoosers.openFileWidget();
-            FileChooserWidget fileChooserWidget2 = FileChoosers.saveFileWidget();
+            FileWidget fileWidget1 = FileChoosers.openFileWidget();
+            FileWidget fileWidget2 = FileChoosers.saveFileWidget();
             JButton jButton = new JButton("OK");
 
             RowsWidget wizardContent = new RowsWidget(_rowsWidget -> {
-                _rowsWidget.addRow(fileChooserWidget1.getUi());
-                _rowsWidget.addRow(fileChooserWidget2.getUi());
+                _rowsWidget.addRow(fileWidget1.getUi());
+                _rowsWidget.addRow(fileWidget2.getUi());
                 _rowsWidget.addRow(jButton);
             });
 
@@ -129,18 +131,17 @@ public class WizardWidgetTest {
                         )
                     );
                     rowsWidget.addRow(
-                        FileChooserWidget.ui(fileChooser -> {
-                            fileChooser.setInitialFile(Paths.get("build.gradle"));
-                            fileChooser.setFileChoiceStrategy(() -> {
-                                WindowsFileChooser windowsFileChooser = new WindowsFileChooser(wFileChooser -> {
-                                    wFileChooser.title = "Choose gradle build";
-                                    wFileChooser.initialFile = fileChooser.getSelf().getState().path;
-                                    wFileChooser.addFilter("All files (*.*)", "*.*");
-                                    wFileChooser.addFilter("Gradle files (*.gradle)", "*.gradle");
-                                });
-
-                                return windowsFileChooser.getFile();
-                            });
+                        FileWidget.ui(fileChooser -> {
+                            fileChooser.setTitle("Gradle Build File");
+                            fileChooser.setMessage("Select the Gradle build file for your project.");
+                            fileChooser.setFile(Paths.get("build.gradle"));
+                            fileChooser.getFileChooserWidget().setFilters(
+                                Arrays.asList(
+                                    filter("Gradle files (*.gradle)", "*.gradle"),
+                                    filter("All files (*.*)", "*.*")
+                                )
+                            );
+                            fileChooser.setFileChooserWidget(WindowsFileChooser.dialog());
                         })
                     );
                     rowsWidget.addRow(
@@ -167,6 +168,8 @@ public class WizardWidgetTest {
                             progressBarWidget.getProgressBarTemplate().setWork(() -> {
                                 sleep(3000);
                             });
+                            progressBarWidget.setTitle("Dangerous Task");
+                            progressBarWidget.setMessage("When you are ready click Start.  It may be very dangerous, so watch out!");
                         })
                     );
                 });

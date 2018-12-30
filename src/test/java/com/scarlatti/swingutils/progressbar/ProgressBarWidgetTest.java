@@ -159,6 +159,20 @@ public class ProgressBarWidgetTest {
     }
 
     @Test
+    public void progressBarWithTitleAndMessage() {
+        SwingUtils.display(
+            ProgressBarWidget.ui(progressBarWidget -> {
+                progressBarWidget.getProgressBarTemplate().setWork(() -> {
+                    sleep(1000);
+                });
+
+                progressBarWidget.setTitle("Task 1");
+                progressBarWidget.setMessage("This task should run for 1 second.");
+            })
+        );
+    }
+
+    @Test
     public void progressBarWithJLabel() {
         // does not work!
         SwingUtils.display(() -> {

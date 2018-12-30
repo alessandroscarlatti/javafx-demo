@@ -13,7 +13,7 @@ public class WindowsFileChooserTest {
         WindowsFileChooser fileChooserWidget = new WindowsFileChooser(fileChooser -> {
             fileChooser.addFilter("All Files", "*.*");
             fileChooser.title = "Choose Keystore";
-            fileChooser.initialFile = Paths.get("build.gradle");
+            fileChooser.setFile(Paths.get("build.gradle"));
         });
 
         Path selectedFile = fileChooserWidget.getFile();
@@ -26,7 +26,7 @@ public class WindowsFileChooserTest {
         WindowsFileChooser fileChooserWidget = new WindowsFileChooser(fileChooser -> {
             fileChooser.addFilter("All Files", "*.*");
             fileChooser.title = "Choose Keystore";
-            fileChooser.initialFile = Paths.get("build.gradle");
+            fileChooser.setFile(Paths.get("build.gradle"));
         });
 
         Path selectedFile = fileChooserWidget.getFile();
@@ -39,7 +39,7 @@ public class WindowsFileChooserTest {
         WindowsFileChooser fileChooserWidget = new WindowsFileChooser(fileChooser -> {
             fileChooser.addFilter("All Files", "*.*");
             fileChooser.title = "Choose Keystore";
-            fileChooser.initialFile = Paths.get("build");
+            fileChooser.setFile(Paths.get("build"));
         });
 
         Path selectedFile = fileChooserWidget.getFile();
@@ -53,7 +53,7 @@ public class WindowsFileChooserTest {
             fileChooser.addFilter("All Files (*.*)", "*.*");
             fileChooser.addFilter("Text Files (*.txt)", "*.txt");
             fileChooser.title = "Save Text File";
-            fileChooser.initialFile = Paths.get("src/main/somefile.txt");
+            fileChooser.setFile(Paths.get("src/main/somefile.txt"));
         });
 
         Path selectedFile = fileChooserWidget.getFile();
@@ -65,7 +65,7 @@ public class WindowsFileChooserTest {
     public void canSuggestFileForSaveWithNoFilters() {
         WindowsFileChooser fileChooserWidget = new WindowsFileChooser(fileChooser -> {
             fileChooser.title = "Choose Keystore";
-            fileChooser.initialFile = Paths.get("src/main/somefile.txt");
+            fileChooser.setFile(Paths.get("src/main/somefile.txt"));
         });
 
         Path selectedFile = fileChooserWidget.getFile();
@@ -76,8 +76,8 @@ public class WindowsFileChooserTest {
     @Test
     public void testFileChooserReturnValueWithParent() {
         JFrame jFrame = new JFrame();
-        FileChooserWidget fileChooserWidget = new FileChooserWidget();
-        jFrame.setContentPane(fileChooserWidget.getUi());
+        FileWidget fileWidget = new FileWidget();
+        jFrame.setContentPane(fileWidget.getUi());
         jFrame.pack();
 
         try {
@@ -87,7 +87,7 @@ public class WindowsFileChooserTest {
                 fileChooser.addFilter("All Files (*.*)", "*.*");
                 fileChooser.addFilter("Text Files (*.txt)", "*.txt");
                 fileChooser.title = "Save Text File";
-                fileChooser.initialFile = Paths.get("build.gradle");
+                fileChooser.setFile(Paths.get("build.gradle"));
                 fileChooser.setGuiParent(jFrame);
             });
 

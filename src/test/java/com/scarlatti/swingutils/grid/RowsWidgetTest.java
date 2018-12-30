@@ -1,9 +1,8 @@
 package com.scarlatti.swingutils.grid;
 
 import com.scarlatti.swingutils.SwingUtils;
-import com.scarlatti.swingutils.filechooser.FileChooserWidget;
+import com.scarlatti.swingutils.filechooser.FileWidget;
 import com.scarlatti.swingutils.filechooser.FileChoosers;
-import com.scarlatti.swingutils.text.JMultilineLabel;
 import com.scarlatti.swingutils.text.MultilineTextWidget;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -28,13 +27,13 @@ public class RowsWidgetTest {
     public void createSeveralRows() {
         SwingUtils.display(() -> {
 
-            FileChooserWidget fileChooserWidget1 = FileChoosers.openFileWidget();
-            FileChooserWidget fileChooserWidget2 = FileChoosers.saveFileWidget();
+            FileWidget fileWidget1 = FileChoosers.openFileWidget();
+            FileWidget fileWidget2 = FileChoosers.saveFileWidget();
             JButton jButton = new JButton("OK");
 
             RowsWidget rowsWidget = new RowsWidget(_rowsWidget -> {
-                _rowsWidget.addRow(fileChooserWidget1.getUi());
-                _rowsWidget.addRow(fileChooserWidget2.getUi());
+                _rowsWidget.addRow(fileWidget1.getUi());
+                _rowsWidget.addRow(fileWidget2.getUi());
                 _rowsWidget.addRow(
                     new MultilineTextWidget("lots of text.").getUi()
                 );
