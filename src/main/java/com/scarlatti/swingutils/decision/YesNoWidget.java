@@ -93,12 +93,15 @@ public class YesNoWidget implements Widget {
         configureUiButtonsByChoice(choice);
 
         widgetPanel = RowsWidget.ui(rowsWidget -> {
-            rowsWidget.addRow(
-                titleLabel
-            );
-            rowsWidget.addRow(
-                MultilineTextWidget.ui(message)
-            );
+            // optional title
+            if (title != null)
+                rowsWidget.addRow(titleLabel);
+
+            // optional message
+            if (message != null)
+                rowsWidget.addRow(MultilineTextWidget.ui(message));
+
+            // always display choice
             rowsWidget.addRow(
                 ColumnsWidget.ui(columnsWidget -> {
                     columnsWidget.addFixedColumn(noButton);
@@ -134,10 +137,15 @@ public class YesNoWidget implements Widget {
         buttonGroup.add(noOption);
 
         widgetPanel = RowsWidget.ui(rowsWidget -> {
-            rowsWidget.addRow(titleLabel);
-            rowsWidget.addRow(
-                MultilineTextWidget.ui(message)
-            );
+            // optional title
+            if (title != null)
+                rowsWidget.addRow(titleLabel);
+
+            // optional message
+            if (message != null)
+                rowsWidget.addRow(MultilineTextWidget.ui(message));
+
+            // always display choice
             rowsWidget.addRow(yesOption);
             rowsWidget.addRow(noOption);
         });
@@ -145,6 +153,28 @@ public class YesNoWidget implements Widget {
 
     private void initUiCheckBox() {
 
+        choiceCheckBox = new JCheckBox(yesText);
+        choiceCheckBox.setSelected(choice);
+
+        choiceCheckBox.addActionListener(e -> {
+            choice = choiceCheckBox.isSelected();
+        });
+
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(makeBold(titleLabel.getFont()));
+
+        widgetPanel = RowsWidget.ui(rowsWidget -> {
+            // optional title
+            if (title != null)
+                rowsWidget.addRow(titleLabel);
+
+            // optional message
+            if (message != null)
+                rowsWidget.addRow(MultilineTextWidget.ui(message));
+
+            // always display choice
+            rowsWidget.addRow(choiceCheckBox);
+        });
     }
 
     private static Font makeBold(Font font) {

@@ -55,9 +55,37 @@ public class YesNoWidgetTest {
     public void choiceWithCheckBox() {
         SwingUtils.display(YesNoWidget.ui(yesNoWidget -> {
             yesNoWidget.setDisplayMode(CHECKBOX);
-            yesNoWidget.setMessage("Are you sure?");
-            yesNoWidget.setChoice(false);
+            yesNoWidget.setTitle(null);
+            yesNoWidget.setMessage(null);
+            yesNoWidget.setYesText("Subscribe me to the spam email list.");
+            yesNoWidget.setChoice(true);
         }));
+    }
+
+    @Test
+    public void showSeveralChoicesWithCheckBox() {
+        SwingUtils.display(
+            RowsWidget.ui(rowsWidget -> {
+                rowsWidget.addRow(
+                    YesNoWidget.ui(yesNoWidget -> {
+                        yesNoWidget.setDisplayMode(CHECKBOX);
+                        yesNoWidget.setTitle(null);
+                        yesNoWidget.setMessage(null);
+                        yesNoWidget.setYesText("Subscribe me to the spam email list.");
+                        yesNoWidget.setChoice(false);
+                    })
+                );
+                rowsWidget.addRow(
+                    YesNoWidget.ui(yesNoWidget -> {
+                        yesNoWidget.setDisplayMode(CHECKBOX);
+                        yesNoWidget.setTitle(null);
+                        yesNoWidget.setMessage(null);
+                        yesNoWidget.setYesText("Subscribe me to the nice email list.");
+                        yesNoWidget.setChoice(true);
+                    })
+                );
+            })
+        );
     }
 
     @Test
