@@ -30,6 +30,10 @@ public class ColumnsWidget implements Widget {
         config.accept(this);
     }
 
+    public static Container ui(Consumer<ColumnsWidget> config) {
+        return new ColumnsWidget(config).getUi();
+    }
+
     public void addRelativeColumn(Container component) {
         components.add(component);
         definitions.add(new ComponentDefinition(component, true));
