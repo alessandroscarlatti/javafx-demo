@@ -39,6 +39,10 @@ public class FileChooserWidget implements Widget {
         config.accept(props);
     }
 
+    public static Container ui(Consumer<FileChooserWidgetProps> config) {
+        return new FileChooserWidget(config).getUi();
+    }
+
     @Override
     public Container getUi() {
         if (widgetPanel == null) {
@@ -143,6 +147,22 @@ public class FileChooserWidget implements Widget {
         FileChooserWidget self;
         Path initialFile;
         Supplier<Path> fileChoiceStrategy;
+
+        public FileChooserWidget getSelf() {
+            return self;
+        }
+
+        public void setSelf(FileChooserWidget self) {
+            this.self = self;
+        }
+
+        public void setInitialFile(Path initialFile) {
+            this.initialFile = initialFile;
+        }
+
+        public void setFileChoiceStrategy(Supplier<Path> fileChoiceStrategy) {
+            this.fileChoiceStrategy = fileChoiceStrategy;
+        }
     }
 
     public enum FileChooserMode {

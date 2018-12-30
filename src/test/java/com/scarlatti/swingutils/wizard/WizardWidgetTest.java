@@ -1,8 +1,10 @@
 package com.scarlatti.swingutils.wizard;
 
 import com.scarlatti.swingutils.SwingUtils;
+import com.scarlatti.swingutils.decision.YesNoWidget;
 import com.scarlatti.swingutils.filechooser.FileChooserWidget;
 import com.scarlatti.swingutils.filechooser.FileChoosers;
+import com.scarlatti.swingutils.filechooser.WindowsFileChooser;
 import com.scarlatti.swingutils.grid.RowsWidget;
 import com.scarlatti.swingutils.progressbar.ProgressBarWidget;
 import com.scarlatti.swingutils.text.MultilineTextWidget;
@@ -11,7 +13,10 @@ import org.junit.Test;
 
 import javax.swing.*;
 
+import java.nio.file.Paths;
+
 import static com.scarlatti.swingutils.SwingUtils.sleep;
+import static com.scarlatti.swingutils.decision.YesNoWidget.DisplayMode.CHECKBOX;
 
 /**
  * @author Alessandro Scarlatti
@@ -122,6 +127,39 @@ public class WizardWidgetTest {
                             "This is a really dangerous task that has a really long description.\n" +
                                 "It may take as long to execute this task as it does to read about it."
                         )
+                    );
+                    rowsWidget.addRow(
+                        FileChooserWidget.ui(fileChooser -> {
+                            fileChooser.setInitialFile(Paths.get("build.gradle"));
+                            fileChooser.setFileChoiceStrategy(() -> {
+                                WindowsFileChooser windowsFileChooser = new WindowsFileChooser(wFileChooser -> {
+                                    wFileChooser.title = "Choose gradle build";
+                                    wFileChooser.initialFile = fileChooser.getSelf().getState().path;
+                                    wFileChooser.addFilter("All files (*.*)", "*.*");
+                                    wFileChooser.addFilter("Gradle files (*.gradle)", "*.gradle");
+                                });
+
+                                return windowsFileChooser.getFile();
+                            });
+                        })
+                    );
+                    rowsWidget.addRow(
+                        YesNoWidget.ui(yesNoWidget -> {
+                            yesNoWidget.setDisplayMode(CHECKBOX);
+                            yesNoWidget.setTitle("Option 1");
+                            yesNoWidget.setMessage(null);
+                            yesNoWidget.setYesText("Use Option 1.");
+                            yesNoWidget.setChoice(false);
+                        })
+                    );
+                    rowsWidget.addRow(
+                        YesNoWidget.ui(yesNoWidget -> {
+                            yesNoWidget.setDisplayMode(CHECKBOX);
+                            yesNoWidget.setTitle("Option 2");
+                            yesNoWidget.setMessage("You should think very carefully about this.\nIt can often lead to catastrophe.");
+                            yesNoWidget.setYesText("I Understand the Risks.  Go ahead anyway.");
+                            yesNoWidget.setChoice(true);
+                        })
                     );
                     rowsWidget.addRow(
                         ProgressBarWidget.ui(progressBarWidget -> {

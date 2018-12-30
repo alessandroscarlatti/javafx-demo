@@ -34,6 +34,16 @@ public class YesNoWidgetTest {
     }
 
     @Test
+    public void showYesNoCancelDialog() {
+        boolean choice = YesNoWidget.modal(yesNoWidget -> {
+            yesNoWidget.setMessage("Are you sure?");
+            yesNoWidget.setChoice(true);
+        });
+
+        System.out.println("Choice: " + (choice ? "Yes" : "No"));
+    }
+
+    @Test
     public void choiceWithButtons() {
         SwingUtils.display(YesNoWidget.ui(yesNoWidget -> {
             yesNoWidget.setDisplayMode(BUTTONS);
@@ -69,7 +79,7 @@ public class YesNoWidgetTest {
                 rowsWidget.addRow(
                     YesNoWidget.ui(yesNoWidget -> {
                         yesNoWidget.setDisplayMode(CHECKBOX);
-                        yesNoWidget.setTitle(null);
+                        yesNoWidget.setTitle("Spam Email List");
                         yesNoWidget.setMessage(null);
                         yesNoWidget.setYesText("Subscribe me to the spam email list.");
                         yesNoWidget.setChoice(false);
@@ -78,7 +88,7 @@ public class YesNoWidgetTest {
                 rowsWidget.addRow(
                     YesNoWidget.ui(yesNoWidget -> {
                         yesNoWidget.setDisplayMode(CHECKBOX);
-                        yesNoWidget.setTitle(null);
+                        yesNoWidget.setTitle("Nice Email List");
                         yesNoWidget.setMessage(null);
                         yesNoWidget.setYesText("Subscribe me to the nice email list.");
                         yesNoWidget.setChoice(true);
