@@ -24,6 +24,10 @@ public class RowsWidget implements Widget {
         config.accept(this);
     }
 
+    public static Container ui(Consumer<RowsWidget> config) {
+        return new RowsWidget(config).getUi();
+    }
+
     public void addRow(Container component) {
         components.add(component);
     }

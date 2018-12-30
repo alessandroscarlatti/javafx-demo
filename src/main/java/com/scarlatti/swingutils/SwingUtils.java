@@ -20,6 +20,10 @@ import java.util.function.Supplier;
  */
 public class SwingUtils {
 
+    public static void display(Container uiComponent) {
+        display(() -> uiComponent);
+    }
+
     public static void display(Supplier<Container> uiComponentSupplier) {
         // create a new frame
         JFrame frame = new JFrame("Demo");

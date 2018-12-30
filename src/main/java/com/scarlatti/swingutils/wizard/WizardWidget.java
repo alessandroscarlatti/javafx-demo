@@ -38,6 +38,10 @@ public class WizardWidget implements Widget {
         config.accept(props);
     }
 
+    public static Container ui(Consumer<WizardWidgetProps> config) {
+        return new WizardWidget(config).getUi();
+    }
+
     @Override
     public Container getUi() {
         if (widgetPanel == null) {

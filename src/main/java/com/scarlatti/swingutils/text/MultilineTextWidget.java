@@ -23,8 +23,16 @@ public class MultilineTextWidget implements Widget {
         this.text = text;
     }
 
+    public static Container ui(String text) {
+        return new MultilineTextWidget(text).getUi();
+    }
+
     public MultilineTextWidget(Consumer<MultilineTextWidget> config) {
         config.accept(this);
+    }
+
+    public static Container ui(Consumer<MultilineTextWidget> config) {
+        return new MultilineTextWidget(config).getUi();
     }
 
     @Override

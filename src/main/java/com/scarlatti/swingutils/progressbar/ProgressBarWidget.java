@@ -69,17 +69,32 @@ public class ProgressBarWidget implements Widget {
     public ProgressBarWidget() {
     }
 
+    public static Container ui() {
+        return new ProgressBarWidget().getUi();
+    }
+
     public ProgressBarWidget(Runnable runnableWork) {
         progressBarTemplate.setWork(runnableWork);
     }
 
+    public static Container ui(Runnable runnableWork) {
+        return new ProgressBarWidget(runnableWork).getUi();
+    }
 
     public ProgressBarWidget(Callable<?> callableWork) {
         progressBarTemplate.setWork(callableWork);
     }
 
+    public static Container ui(Callable<?> callableWork) {
+        return new ProgressBarWidget(callableWork).getUi();
+    }
+
     public ProgressBarWidget(Consumer<ProgressBarWidget> config) {
         config.accept(this);
+    }
+
+    public static Container ui(Consumer<ProgressBarWidget> config) {
+        return new ProgressBarWidget(config).getUi();
     }
 
     /**
