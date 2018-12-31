@@ -3,6 +3,7 @@ package com.scarlatti.swingutils.filechooser;
 import com.scarlatti.swingutils.SwingUtils;
 import com.scarlatti.swingutils.Widget;
 import com.scarlatti.swingutils.text.MultilineTextWidget;
+import com.sun.jna.Platform;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -162,16 +163,15 @@ public class FileWidget implements Widget {
                     throw new RuntimeException("File does not exist " + selectedFile);
                 }
             }
-
-//            new WindowsFileChooser()
-//                .withInitialFile(state.file)
-//                .withGuiParent(widgetPanel)
-//                .getFile();
         });
     }
 
     private FileChooserWidget getDefaultFileChooserWidget() {
-        return WindowsFileChooser.dialog();
+        if (Platform.isWindows()) {
+            return new WindowsFileChooserWidget();
+        } else {
+            return new SwingFileChooserWidget();
+        }
     }
 
     private Path getFileFromFileChooserWidget() {

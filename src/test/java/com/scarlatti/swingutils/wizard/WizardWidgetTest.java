@@ -2,9 +2,7 @@ package com.scarlatti.swingutils.wizard;
 
 import com.scarlatti.swingutils.SwingUtils;
 import com.scarlatti.swingutils.decision.YesNoWidget;
-import com.scarlatti.swingutils.filechooser.FileWidget;
-import com.scarlatti.swingutils.filechooser.FileChoosers;
-import com.scarlatti.swingutils.filechooser.WindowsFileChooser;
+import com.scarlatti.swingutils.filechooser.*;
 import com.scarlatti.swingutils.grid.RowsWidget;
 import com.scarlatti.swingutils.progressbar.ProgressBarWidget;
 import com.scarlatti.swingutils.text.MultilineTextWidget;
@@ -19,6 +17,8 @@ import java.util.Arrays;
 import static com.scarlatti.swingutils.SwingUtils.sleep;
 import static com.scarlatti.swingutils.decision.YesNoWidget.DisplayMode.CHECKBOX;
 import static com.scarlatti.swingutils.filechooser.FileChooserWidget.FileExtensionFilter.filter;
+import static com.scarlatti.swingutils.filechooser.FileChooserWidget.FileType.DIRECTORY;
+import static com.scarlatti.swingutils.filechooser.FileChooserWidget.Mode.SAVE;
 
 /**
  * @author Alessandro Scarlatti
@@ -135,13 +135,22 @@ public class WizardWidgetTest {
                             fileChooser.setTitle("Gradle Build File");
                             fileChooser.setMessage("Select the Gradle build file for your project.");
                             fileChooser.setFile(Paths.get("build.gradle"));
-                            fileChooser.getFileChooserWidget().setFilters(
-                                Arrays.asList(
-                                    filter("Gradle files (*.gradle)", "*.gradle"),
-                                    filter("All files (*.*)", "*.*")
-                                )
-                            );
-                            fileChooser.setFileChooserWidget(WindowsFileChooser.dialog());
+                        })
+                    );
+                    rowsWidget.addRow(
+                        FileWidget.ui(fileChooser -> {
+                            fileChooser.setTitle("Installation Directory");
+                            fileChooser.setMessage("Select the directory where we will install the dangerous task.");
+                            fileChooser.setFile(Paths.get(""));
+                            fileChooser.setFileType(DIRECTORY);
+                        })
+                    );
+                    rowsWidget.addRow(
+                        FileWidget.ui(fileChooser -> {
+                            fileChooser.setTitle("Backup");
+                            fileChooser.setMessage("Be sure to backup your work to this file.");
+                            fileChooser.setFile(Paths.get("backup.txt"));
+                            fileChooser.getFileChooserWidget().setMode(SAVE);
                         })
                     );
                     rowsWidget.addRow(

@@ -20,6 +20,12 @@ public abstract class AbstractFileChooserWidget implements FileChooserWidget {
     Mode mode = Mode.OPEN;
     FileType fileType = FileType.FILE;
 
+    {
+        filters.add(
+            FileExtensionFilter.filter("All files (*.*)", "*.*")
+        );
+    }
+
     @Override
     public Path chooseFile() {
         this.file = doChooseFile();

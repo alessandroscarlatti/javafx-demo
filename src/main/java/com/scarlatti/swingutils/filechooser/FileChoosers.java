@@ -22,8 +22,8 @@ public class FileChoosers {
 
     public static WindowsFileChooser openFileChooser() {
         return new WindowsFileChooser(fileChooser -> {
-            fileChooser.title = "Open File";
-            fileChooser.file = null;
+            fileChooser.setTitle("Open File");
+            fileChooser.setFile(null);
         });
     }
 
@@ -36,7 +36,7 @@ public class FileChoosers {
     public static FileWidget saveFileWidget() {
         return new FileWidget(fileChooser -> {
             fileChooser.setTitle("Save File");
-            fileChooser.getFileChooserWidget().setMode(WindowsFileChooser.Mode.SAVE);
+            fileChooser.getFileChooserWidget().setMode(FileChooserWidget.Mode.SAVE);
         });
     }
 }

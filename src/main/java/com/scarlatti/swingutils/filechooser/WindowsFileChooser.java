@@ -15,10 +15,14 @@ import java.awt.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+
+import static com.scarlatti.swingutils.filechooser.FileChooserWidget.FileExtensionFilter;
+import static com.scarlatti.swingutils.filechooser.FileChooserWidget.Mode;
 
 
 /**
@@ -73,7 +77,14 @@ import java.util.function.Consumer;
  * interfere with each other. Unfortunately there doesn't seem to be a way
  * to override this behaviour.
  */
-public class WindowsFileChooser extends AbstractFileChooserWidget {
+public class WindowsFileChooser  {
+
+    private List<FileExtensionFilter> filters = new ArrayList<>();
+    private Path file;
+    private String title;
+    private Window parent;
+    private Mode mode = Mode.OPEN;
+
     {
         filters.add(
             FileExtensionFilter.filter("All files (*.*)", "*.*")
@@ -95,10 +106,9 @@ public class WindowsFileChooser extends AbstractFileChooserWidget {
         return new WindowsFileChooser(config);
     }
 
-    @Override
-    public Path doChooseFile() {
+    public Path chooseFile() {
         Objects.requireNonNull(mode, "Mode must not be null.");
-        return showWindowsFileChooserDialog(parent, mode == Mode.OPEN);
+        return showDialog(parent, mode == Mode.OPEN);
     }
 
     /**
@@ -108,7 +118,7 @@ public class WindowsFileChooser extends AbstractFileChooserWidget {
      * @param open   whether to show the open dialog, if false save dialog is shown
      * @return true if the user clicked ok, false otherwise
      */
-    private Path showWindowsFileChooserDialog(Window parent, boolean open) {
+    private Path showDialog(Window parent, boolean open) {
         final Comdlg32.OpenFileNameStructure params = new Comdlg32.OpenFileNameStructure();
         params.Flags =
             // use explorer-style interface
@@ -175,7 +185,6 @@ public class WindowsFileChooser extends AbstractFileChooserWidget {
             params.lpstrTitle.clear(buffer);
             params.lpstrTitle.setWideString(0L, title);
         }
-
 
         final boolean successful = open ?
             Comdlg32.GetOpenFileNameW(params) :
@@ -269,10 +278,30 @@ public class WindowsFileChooser extends AbstractFileChooserWidget {
         return filters.get(params.nFilterIndex - 1);
     }
 
+    public void setFile(Path file) {
+        this.file = file;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setParent(Window parent) {
+        this.parent = parent;
+    }
+
+    public void setFilters(List<FileExtensionFilter> filters) {
+        this.filters = filters;
+    }
+
+    public void setMode(Mode mode) {
+        this.mode = mode;
+    }
+
     /**
      * Interface for the native Windows dialog.
      */
-    private static class Comdlg32 {
+    static class Comdlg32 {
         static {
             Native.register("comdlg32");
         }
@@ -398,115 +427,5 @@ public class WindowsFileChooser extends AbstractFileChooserWidget {
         public static final int FNERR_SUBCLASSFAILURE = 0x3001;
         public static final int FNERR_INVALIDFILENAME = 0x3002;
         public static final int FNERR_BUFFERTOOSMALL = 0x3003;
-    }
-
-    private static class SomeDll {
-        static {
-            Native.register("user32");
-        }
-
-        /**
-         * https://docs.microsoft.com/en-us/windows/desktop/api/shlobj_core/nf-shlobj_core-shbrowseforfolderw
-         */
-        public static native boolean SHBrowseForFolderW(BrowseInfoAStructure params);
-
-        /**
-         * typedef struct _browseinfoA {
-         * HWND              hwndOwner;
-         * PCIDLIST_ABSOLUTE pidlRoot;
-         * LPSTR             pszDisplayName;
-         * LPCSTR            lpszTitle;
-         * UINT              ulFlags;
-         * BFFCALLBACK       lpfn;
-         * LPARAM            lParam;
-         * int               iImage;
-         * } BROWSEINFOA, *PBROWSEINFOA, *LPBROWSEINFOA;
-         * <p>
-         * https://docs.microsoft.com/en-us/windows/desktop/api/shlobj_core/ns-shlobj_core-_browseinfoa
-         */
-        public static class BrowseInfoAStructure extends Structure {
-
-            public Pointer hwndOwner;
-            public int pidlRoot;  // not sure about this type
-            public WString pszDisplayName;
-            public WString pszTitle;
-            public WString lpstrFilter;
-            public int ulFlags;
-            public Pointer lpfn;
-            public int iImage;
-
-            @Override
-            protected List<String> getFieldOrder() {
-                return Arrays.asList(
-                    "hwndOwner",
-                    "pidlRoot",
-                    "pszDisplayName",
-                    "lpszTitle",
-                    "ulFlags",
-                    "lpfn",
-                    "lParam",
-                    "iImage"
-                );
-            }
-
-            // 0x00000001. Only return file system directories. If the user selects folders that are not part of the file system, the OK button is grayed.
-            private static final int BIF_RETURNONLYFSDIRS = 0x00000001;
-
-            //Note  The OK button remains enabled for "\\server" items, as well as "\\server\share" and directory items. However, if the user selects a "\\server" item, passing the PIDL returned by SHBrowseForFolder to SHGetPathFromIDList fails.
-
-            //0x00000002. Do not include network folders below the domain level in the dialog box's tree view control.
-            private static final int BIF_DONTGOBELOWDOMAIN = 0x00000002;
-
-            //0x00000004. Include a status area in the dialog box. The callback function can set the status text by sending messages to the dialog box. This flag is not supported when BIF_NEWDIALOGSTYLE is specified.
-            private static final int BIF_STATUSTEXT = 0x00000004;
-
-            //0x00000008. Only return file system ancestors. An ancestor is a subfolder that is beneath the root folder in the namespace hierarchy. If the user selects an ancestor of the root folder that is not part of the file system, the OK button is grayed.
-            private static final int BIF_RETURNFSANCESTORS = 0x00000008;
-
-            //0x00000010. Version 4.71. Include an edit control in the browse dialog box that allows the user to type the name of an item.
-            private static final int BIF_EDITBOX = 0x00000010;
-
-            //    0x00000020. Version 4.71. If the user types an invalid name into the edit box, the browse dialog box calls the application's BrowseCallbackProc with the BFFM_VALIDATEFAILED message. This flag is ignored if BIF_EDITBOX is not specified.
-            private static final int BIF_VALIDATE = 0x00000020;
-
-            //    0x00000040. Version 5.0. Use the new user interface. Setting this flag provides the user with a larger dialog box that can be resized. The dialog box has several new capabilities, including: drag-and-drop capability within the dialog box, reordering, shortcut menus, new folders, delete, and other shortcut menu commands.
-            private static final int BIF_NEWDIALOGSTYLE = 0x00000040;
-
-            //    Note  If COM is initialized through CoInitializeEx with the COINIT_MULTITHREADED flag set, SHBrowseForFolder fails if BIF_NEWDIALOGSTYLE is passed.
-
-            //    0x00000080. Version 5.0. The browse dialog box can display URLs. The BIF_USENEWUI and BIF_BROWSEINCLUDEFILES flags must also be set. If any of these three flags are not set, the browser dialog box rejects URLs. Even when these flags are set, the browse dialog box displays URLs only if the folder that contains the selected item supports URLs. When the folder's IShellFolder::GetAttributesOf method is called to request the selected item's attributes, the folder must set the SFGAO_FOLDER attribute flag. Otherwise, the browse dialog box will not display the URL.
-            private static final int BIF_BROWSEINCLUDEURLS = 0x00000080;
-
-            //    BIF_USENEWUI
-            //    Version 5.0. Use the new user interface, including an edit box. This flag is equivalent to BIF_EDITBOX | BIF_NEWDIALOGSTYLE.
-            //
-            //    Note  If COM is initialized through CoInitializeEx with the COINIT_MULTITHREADED flag set, SHBrowseForFolder fails if BIF_USENEWUI is passed.
-
-            //    0x00000100. Version 6.0. When combined with BIF_NEWDIALOGSTYLE, adds a usage hint to the dialog box, in place of the edit box. BIF_EDITBOX overrides this flag.
-            private static final int BIF_UAHINT = 0x00000100;
-
-            //    0x00000200. Version 6.0. Do not include the New Folder button in the browse dialog box.
-            private static final int BIF_NONEWFOLDERBUTTON = 0x00000200;
-
-            //    0x00000400. Version 6.0. When the selected item is a shortcut, return the PIDL of the shortcut itself rather than its target.
-            private static final int BIF_NOTRANSLATETARGETS = 0x00000400;
-
-            //    0x00001000. Only return computers. If the user selects anything other than a computer, the OK button is grayed.
-            private static final int BIF_BROWSEFORCOMPUTER = 0x00001000;
-
-            //    0x00002000. Only allow the selection of printers. If the user selects anything other than a printer, the OK button is grayed.
-            private static final int BIF_BROWSEFORPRINTER = 0x00002000;
-
-            //    In Windows XP and later systems, the best practice is to use a Windows XP-style dialog, setting the root of the dialog to the Printers and Faxes folder (CSIDL_PRINTERS).
-
-            //    0x00004000. Version 4.71. The browse dialog box displays files as well as folders.
-            private static final int BIF_BROWSEINCLUDEFILES = 0x00004000;
-
-            //    0x00008000. Version 5.0. The browse dialog box can display sharable resources on remote systems. This is intended for applications that want to expose remote shares on a local system. The BIF_NEWDIALOGSTYLE flag must also be set.
-            private static final int BIF_SHAREABLE = 0x00008000;
-
-            //    0x00010000. Windows 7 and later. Allow folder junctions such as a library or a compressed file with a .zip file name extension to be browsed.
-            private static final int BIF_BROWSEFILEJUNCTIONS = 0x00010000;
-        }
     }
 }

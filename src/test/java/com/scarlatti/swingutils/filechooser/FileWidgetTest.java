@@ -5,8 +5,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import static com.scarlatti.swingutils.filechooser.FileChooserWidget.FileExtensionFilter.filter;
+import static com.scarlatti.swingutils.filechooser.FileChooserWidget.FileType.DIRECTORY;
 import static com.scarlatti.swingutils.filechooser.FileChooserWidget.Mode.SAVE;
 
 /**
@@ -26,10 +28,11 @@ public class FileWidgetTest {
             FileWidget.ui(fileChooser -> {
                 fileChooser.setFile(Paths.get("build.gradle"));
                 fileChooser.setFileChooserWidget(
-                    WindowsFileChooser.dialog(wFileChooser -> {
+                    WindowsFileChooserWidget.dialog(wFileChooser -> {
+                        wFileChooser.setFilters(Arrays.asList(
+                            filter("All Files", "*.*")
+                        ));
                         wFileChooser.setTitle("Choose gradle build");
-                        wFileChooser.addFilter("All files (*.*)", "*.*");
-                        wFileChooser.addFilter("Gradle files (*.gradle)", "*.gradle");
                     })
                 );
             })
@@ -42,7 +45,17 @@ public class FileWidgetTest {
             FileWidget.ui(fileChooserWidget -> {
                 fileChooserWidget.setTitle("Configuration File");
                 fileChooserWidget.setMessage("This file should hold all your configurations");
-                fileChooserWidget.setFileChooserWidget(null);  // todo fix this
+            })
+        );
+    }
+
+    @Test
+    public void createWidgetForDirWithTitleAndMessage() {
+        SwingUtils.display(
+            FileWidget.ui(fileChooserWidget -> {
+                fileChooserWidget.setTitle("Configuration File");
+                fileChooserWidget.setMessage("This file should hold all your configurations");
+                fileChooserWidget.setFileType(DIRECTORY);
             })
         );
     }
@@ -56,6 +69,19 @@ public class FileWidgetTest {
                 fileChooser.getFileChooserWidget().setFilters(
                     filter("Gradle files (*.gradle)", "*.gradle"),
                     filter("All files (*.*)", "*.*")
+                );
+            })
+        );
+    }
+
+    @Test
+    public void createSwingFileChooser() {
+        SwingUtils.display(
+            FileWidget.ui(fileChooserWidget -> {
+                fileChooserWidget.setTitle("Configuration File");
+                fileChooserWidget.setMessage("This file should hold all your configurations");
+                fileChooserWidget.setFileChooserWidget(
+                    new SwingFileChooserWidget()
                 );
             })
         );
