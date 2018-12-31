@@ -1,10 +1,7 @@
-package com.scarlatti.swingutils.filechooser;
+package com.scarlatti.swingutils.file;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import java.io.File;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Consumer;
 

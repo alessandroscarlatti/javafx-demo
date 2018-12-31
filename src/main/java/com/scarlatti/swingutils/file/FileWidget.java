@@ -1,4 +1,4 @@
-package com.scarlatti.swingutils.filechooser;
+package com.scarlatti.swingutils.file;
 
 import com.scarlatti.swingutils.SwingUtils;
 import com.scarlatti.swingutils.Widget;
@@ -12,15 +12,12 @@ import java.awt.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static com.scarlatti.swingutils.SwingUtils.IconScale.ICON_SCALE_15;
 import static com.scarlatti.swingutils.SwingUtils.makeBold;
-import static com.scarlatti.swingutils.filechooser.FileChooserWidget.FileExtensionFilter.filter;
-import static com.scarlatti.swingutils.filechooser.FileChooserWidget.FileType;
+import static com.scarlatti.swingutils.file.FileChooserWidget.FileType;
 
 /**
  * @author Alessandro Scarlatti

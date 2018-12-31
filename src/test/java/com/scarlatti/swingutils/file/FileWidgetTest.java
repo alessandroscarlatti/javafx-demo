@@ -1,4 +1,4 @@
-package com.scarlatti.swingutils.filechooser;
+package com.scarlatti.swingutils.file;
 
 import com.scarlatti.swingutils.SwingUtils;
 import org.junit.BeforeClass;
@@ -7,9 +7,9 @@ import org.junit.Test;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
-import static com.scarlatti.swingutils.filechooser.FileChooserWidget.FileExtensionFilter.filter;
-import static com.scarlatti.swingutils.filechooser.FileChooserWidget.FileType.DIRECTORY;
-import static com.scarlatti.swingutils.filechooser.FileChooserWidget.Mode.SAVE;
+import static com.scarlatti.swingutils.file.FileChooserWidget.FileExtensionFilter.filter;
+import static com.scarlatti.swingutils.file.FileChooserWidget.FileType.DIRECTORY;
+import static com.scarlatti.swingutils.file.FileChooserWidget.Mode.SAVE;
 
 /**
  * @author Alessandro Scarlatti

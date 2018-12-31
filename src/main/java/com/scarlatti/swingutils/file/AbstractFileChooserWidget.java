@@ -1,4 +1,4 @@
-package com.scarlatti.swingutils.filechooser;
+package com.scarlatti.swingutils.file;
 
 import javax.swing.*;
 import java.awt.*;

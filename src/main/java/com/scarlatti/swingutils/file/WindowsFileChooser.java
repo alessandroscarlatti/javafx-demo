@@ -7,7 +7,7 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE.
  */
-package com.scarlatti.swingutils.filechooser;
+package com.scarlatti.swingutils.file;
 
 import com.sun.jna.*;
 
@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import static com.scarlatti.swingutils.filechooser.FileChooserWidget.FileExtensionFilter;
-import static com.scarlatti.swingutils.filechooser.FileChooserWidget.Mode;
+import static com.scarlatti.swingutils.file.FileChooserWidget.FileExtensionFilter;
+import static com.scarlatti.swingutils.file.FileChooserWidget.Mode;
 
 
 /**

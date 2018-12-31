@@ -2,7 +2,8 @@ package com.scarlatti.swingutils.wizard;
 
 import com.scarlatti.swingutils.SwingUtils;
 import com.scarlatti.swingutils.decision.YesNoWidget;
-import com.scarlatti.swingutils.filechooser.*;
+import com.scarlatti.swingutils.file.*;
+import com.scarlatti.swingutils.flow.FlowWidget;
 import com.scarlatti.swingutils.grid.RowsWidget;
 import com.scarlatti.swingutils.progressbar.ProgressBarWidget;
 import com.scarlatti.swingutils.text.MultilineTextWidget;
@@ -12,13 +13,11 @@ import org.junit.Test;
 import javax.swing.*;
 
 import java.nio.file.Paths;
-import java.util.Arrays;
 
 import static com.scarlatti.swingutils.SwingUtils.sleep;
 import static com.scarlatti.swingutils.decision.YesNoWidget.DisplayMode.CHECKBOX;
-import static com.scarlatti.swingutils.filechooser.FileChooserWidget.FileExtensionFilter.filter;
-import static com.scarlatti.swingutils.filechooser.FileChooserWidget.FileType.DIRECTORY;
-import static com.scarlatti.swingutils.filechooser.FileChooserWidget.Mode.SAVE;
+import static com.scarlatti.swingutils.file.FileChooserWidget.FileType.DIRECTORY;
+import static com.scarlatti.swingutils.file.FileChooserWidget.Mode.SAVE;
 
 /**
  * @author Alessandro Scarlatti
@@ -183,6 +182,16 @@ public class WizardWidgetTest {
                     );
                 });
                 wizard.title = "Dangerous task.";
+            })
+        );
+    }
+
+    @Test
+    public void wizardWithFlow() {
+        SwingUtils.display(
+            WizardWidget.ui(wizard -> {
+                wizard.title = "Wizard with Flow";
+                wizard.wizardContent = FlowWidget.ui();
             })
         );
     }

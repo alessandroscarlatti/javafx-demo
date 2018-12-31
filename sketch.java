@@ -101,6 +101,23 @@ provide:
 - use props as an inner class
 
 
+ return WizardWidget.ui(wizard -> {
+	wizard.wizardContent = RowsWidget.ui(rowsWidget -> {
+		rowsWidget.addRow(MultilineTextWidget.ui(
+			"This is a really dangerous task that has a really long description.\n" +
+				"It may take as long to execute this task as it does to read about it."
+		));
+		rowsWidget.addRow(ProgressBarWidget.ui((progressBarWidget -> {
+			progressBarWidget.setRepeatable(true);
+			progressBarWidget.getProgressBarTemplate().setWork(() -> {
+				sleep(3000);
+			});
+		})));
+	});
+	wizard.title = "Dangerous task.";
+});
+
+
 
 
 

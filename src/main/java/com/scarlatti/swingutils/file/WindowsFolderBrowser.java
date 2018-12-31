@@ -7,7 +7,7 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE.
  */
-package com.scarlatti.swingutils.filechooser;
+package com.scarlatti.swingutils.file;
 
 import com.sun.jna.Memory;
 import com.sun.jna.Native;

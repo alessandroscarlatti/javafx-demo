@@ -1,8 +1,8 @@
 package com.scarlatti.swingutils.grid;
 
 import com.scarlatti.swingutils.SwingUtils;
-import com.scarlatti.swingutils.filechooser.FileWidget;
-import com.scarlatti.swingutils.filechooser.FileChoosers;
+import com.scarlatti.swingutils.file.FileWidget;
+import com.scarlatti.swingutils.file.FileChoosers;
 import com.scarlatti.swingutils.text.MultilineTextWidget;
 import org.junit.BeforeClass;
 import org.junit.Test;

@@ -1,4 +1,4 @@
-package com.scarlatti.swingutils.filechooser;
+package com.scarlatti.swingutils.file;
 
 import java.nio.file.Path;
 import java.util.Objects;

@@ -1,4 +1,4 @@
-package com.scarlatti.swingutils.filechooser;
+package com.scarlatti.swingutils.file;
 
 import org.junit.Test;
 
@@ -8,7 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
-import static com.scarlatti.swingutils.filechooser.FileChooserWidget.FileExtensionFilter.filter;
+import static com.scarlatti.swingutils.file.FileChooserWidget.FileExtensionFilter.filter;
 
 public class WindowsFileChooserTest {
 
