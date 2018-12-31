@@ -124,4 +124,9 @@ public class SwingUtils {
     public static Font makeBold(Font font) {
         return font.deriveFont(Font.BOLD, font.getSize());
     }
+
+
+    // how to get something into the corner
+    // .addPreferredGap(RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)  // todo turn this into a static utility method...?
+
 }

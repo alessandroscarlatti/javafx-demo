@@ -15,9 +15,21 @@ public class FlowWidgetTest {
     }
 
     @Test
-    public void testFlowWidget() {
+    public void flowWidget() {
         SwingUtils.display(
             FlowWidget.ui()
+        );
+    }
+
+
+    @Test
+    public void widgetWithBackAndFinishEnabled() {
+        SwingUtils.display(
+            FlowWidget.ui(flowWidget -> {
+                flowWidget.setCanCancel(true);
+                flowWidget.setCanFinish(true);
+                flowWidget.setCanGoBack(true);
+            })
         );
     }
 }
