@@ -117,8 +117,58 @@ provide:
 	wizard.title = "Dangerous task.";
 });
 
+flow.executeStep(step -> {
+	step.setName("config1");
+	step.setRepeatable(true);
+	step.setGoNextText("Install Files");
+	step.setExecution(() -> {
+		card.setView(config1Card);
+		
+		// when this method finishes, that means the step is done.
+		flow.canGoNext(true);
+	});
+});
 
+flow.executeStep(step -> {
+	step.setName("task1");
+	step.setExecution(() -> {
+		// update whatever view necessary
+		card.setView(task1Card);
+		
+		// now start the task.
+		// exceptions will be thrown here if the work fails.
+		try {
+			task1.getProgressBarWidget().getProgressBarTemplate().invokeWorkWithProgressBar();
+		} catch (Exception e) {
+			// decide the next step...
+			// trigger the next step...
+		}
+	});
+});
 
+flow.executeStep(step -> {
+	step.setName("config2");
+	step.setRepeatable(true);
+	step.setGoNextText("Install Files 2");
+	step.setExecution(() -> {
+		card.setView(config1Card);
+		
+		// when this method finishes, that means the step is done.
+		flow.canGoNext(true);
+	});
+});
+
+flow.executeStep(step -> {
+	step.setName("task2");
+	step.setExecution(() -> {
+		// update whatever view necessary
+		card.setView(task1Card);
+		
+		// now start the task.
+		// exceptions will be thrown here if the work fails.
+		task1.getProgressBarWidget().getProgressBarTemplate().invokeWorkWithProgressBar();
+	});
+});
 
 
 

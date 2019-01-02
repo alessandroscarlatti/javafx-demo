@@ -26,9 +26,17 @@ public class FlowWidgetTest {
     public void widgetWithBackAndFinishEnabled() {
         SwingUtils.display(
             FlowWidget.ui(flowWidget -> {
-                flowWidget.setCanCancel(true);
-                flowWidget.setCanFinish(true);
-                flowWidget.setCanGoBack(true);
+                flowWidget.addStep(
+                    FlowStepWidget.step(flowStepWidget -> {
+                        flowStepWidget.setCommandName("Do the Thing 1");
+                    })
+                );
+                flowWidget.addStep(
+                    FlowStepWidget.step(flowStepWidget -> {
+                        flowStepWidget.setCommandName("Do the Thing 2");
+                    })
+                );
+                flowWidget.start();
             })
         );
     }
