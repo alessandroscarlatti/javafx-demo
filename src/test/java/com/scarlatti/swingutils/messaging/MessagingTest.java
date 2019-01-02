@@ -70,6 +70,56 @@ public class MessagingTest {
         connection2.disconnect();
     }
 
+    @Test
+    public void testDinnerNotifier() {
+        MessageBus bus = new MessageBus();
+        Connection connection = bus.connect();
+
+        Topic<LunchNotifier> lunchTopic = Topic.create("lunch", LunchNotifier.class);
+        Topic<DinnerNotifier> dinnerTopic = Topic.create("dinner", DinnerNotifier.class);
+
+        connection.subscribe(dinnerTopic, new DinnerNotifier() {
+            @Override
+            public void mainCourse(String name) {
+                System.out.println("Main course: " + name);
+            }
+        });
+
+        connection.subscribe(lunchTopic, new LunchNotifier() {
+            @Override
+            public void firstCourseServed() {
+                System.out.println("first course served");
+            }
+
+            @Override
+            public void secondCourseServed() {
+                System.out.println("second course served");
+
+            }
+
+            @Override
+            public void thirdCourseServed() {
+                System.out.println("third course served");
+
+            }
+        });
+
+        LunchNotifier lunchNotifier = bus.syncPublisher(lunchTopic);
+        DinnerNotifier dinnerNotifier = bus.syncPublisher(dinnerTopic);
+
+        lunchNotifier.firstCourseServed();
+        lunchNotifier.secondCourseServed();
+        lunchNotifier.thirdCourseServed();
+
+        dinnerNotifier.mainCourse("Turkey");
+
+        connection.disconnect();
+    }
+
+    private interface DinnerNotifier {
+        void mainCourse(String name);
+    }
+
     private interface LunchNotifier {
         void firstCourseServed();
         void secondCourseServed();

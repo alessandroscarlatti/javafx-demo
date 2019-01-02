@@ -52,7 +52,6 @@ public class MessageBus {
                 Thread.currentThread().getContextClassLoader(), new Class[]{topic.messageClazz}, this::invoke);
         }
 
-        @SuppressWarnings("unchecked")
         private Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
             // a nested call within a topic would probably still be on the same thread...
@@ -74,21 +73,27 @@ public class MessageBus {
 
             // invoke this method on each of the subscribed objects...
             // ask the connection list if there is a connection that is listening for this topic.
+            performQueuedInvocationsOnAllSubscribers();
+            return null;
+        }
 
+        @SuppressWarnings("unchecked")
+        private void performQueuedInvocationsOnAllSubscribers() throws Throwable {
             while (queue.size() > 0) {
                 Invocation invocation = queue.peek();
 
                 for (Connection connection : connections) {
                     if (connection.hasSubscriptionForTopic(topic)) {
                         T subscriptionObject = (T) connection.getTopicSubject(topic);
-                        invocation.method.invoke(subscriptionObject, args);
+                        invocation.method.invoke(subscriptionObject, invocation.args);
                     }
                 }
 
+                // poll after we have notified subscribers so that new invocations
+                // added to the queue do not accidentally think it is empty before
+                // we have actually notified all subscribers.
                 queue.poll();
             }
-
-            return null;
         }
 
         private class Invocation {
