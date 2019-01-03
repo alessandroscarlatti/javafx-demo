@@ -80,12 +80,12 @@ public class WizardWidgetTest {
                 rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
                 rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
                 rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
-                rowsWidget.addRow(new ProgressBarWidget(progressBarWidget -> {
-                    progressBarWidget.getProgressBarTemplate().setWork(() -> {
-                        sleep(1000);
-                    });
-                    progressBarWidget.setRepeatable(true);
-                }).getUi());
+//                rowsWidget.addRow(new ProgressBarWidget(progressBarWidget -> {
+//                    progressBarWidget.getProgressBarTemplate().setWork(() -> {
+//                        sleep(1000);
+//                    });
+//                    progressBarWidget.setRepeatable(true);
+//                }).getUi());
             });
 
             WizardWidget wizardWidget = new WizardWidget(wizard -> {
@@ -108,9 +108,9 @@ public class WizardWidgetTest {
                     ).getUi());
                     rowsWidget.addRow(new ProgressBarWidget((progressBarWidget -> {
                         progressBarWidget.setRepeatable(true);
-                        progressBarWidget.getProgressBarTemplate().setWork(() -> {
-                            sleep(3000);
-                        });
+//                        progressBarWidget.getProgressBarTemplate().setWork(() -> {
+//                            sleep(3000);
+//                        });
                     })).getUi());
                 }).getUi();
                 wizard.title = "Dangerous task.";
@@ -173,9 +173,9 @@ public class WizardWidgetTest {
                     rowsWidget.addRow(
                         ProgressBarWidget.ui(progressBarWidget -> {
                             progressBarWidget.setRepeatable(false);
-                            progressBarWidget.getProgressBarTemplate().setWork(() -> {
-                                sleep(3000);
-                            });
+//                            progressBarWidget.getProgressBarTemplate().setWork(() -> {
+//                                sleep(3000);
+//                            });
                             progressBarWidget.setTitle("Dangerous Task");
                             progressBarWidget.setMessage("When you are ready click Start.  It may be very dangerous, so watch out!");
                         })
