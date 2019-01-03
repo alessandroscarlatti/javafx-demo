@@ -42,11 +42,10 @@ public class ProgressBarWidgetTest {
 
         SwingUtils.display(
             ProgressBarWidget.ui(progressBarWidget -> {
-                progressBarWidget.connect(bus, taskTemplate);
+                progressBarWidget.connectEvents(bus, taskTemplate.getEventsTopic());
+                progressBarWidget.connectApi(bus, taskTemplate.getApiTopic());
             })
         );
-
-
     }
 
     private String longTask() {

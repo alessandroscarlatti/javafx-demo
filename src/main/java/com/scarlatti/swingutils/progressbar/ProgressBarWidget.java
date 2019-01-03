@@ -105,9 +105,12 @@ public class ProgressBarWidget implements Widget {
         return new ProgressBarWidget(config).getUi();
     }
 
-    public void connect(MessageBus bus, TaskTemplate taskTemplate) {
-        createPublisher(bus, taskTemplate.getCommandsTopic());
-        subscribeToEvents(bus, taskTemplate.getEventsTopic());
+    public void connectEvents(MessageBus bus, Topic<TaskTemplateEventsNotifier> eventsTopic) {
+        subscribeToEvents(bus, eventsTopic);
+    }
+
+    public void connectApi(MessageBus bus, Topic<TaskTemplateCommandsNotifier> commandsTopic) {
+        createPublisher(bus, commandsTopic);
     }
 
     private void createPublisher(MessageBus bus, Topic<TaskTemplateCommandsNotifier> commandsTopic) {

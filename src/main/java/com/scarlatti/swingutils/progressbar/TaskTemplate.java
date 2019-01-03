@@ -61,7 +61,7 @@ public class TaskTemplate {
         return eventsTopic;
     }
 
-    public Topic<TaskTemplateCommandsNotifier> getCommandsTopic() {
+    public Topic<TaskTemplateCommandsNotifier> getApiTopic() {
         if (commandsTopic == null)
             commandsTopic = Topic.create(name + ".api", TaskTemplateCommandsNotifier.class);
 
@@ -70,7 +70,7 @@ public class TaskTemplate {
 
     public void connect(MessageBus bus) {
         eventsNotifier = bus.syncPublisher(getEventsTopic());
-        subscribeToEvents(bus, getCommandsTopic());
+        subscribeToEvents(bus, getApiTopic());
     }
 
     public void subscribeToEvents(MessageBus bus, Topic<TaskTemplateCommandsNotifier> commandsNotifierTopic) {
