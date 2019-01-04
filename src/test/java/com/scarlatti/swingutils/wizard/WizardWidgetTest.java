@@ -5,7 +5,7 @@ import com.scarlatti.swingutils.decision.YesNoWidget;
 import com.scarlatti.swingutils.file.*;
 import com.scarlatti.swingutils.flow.FlowWidget;
 import com.scarlatti.swingutils.grid.RowsWidget;
-import com.scarlatti.swingutils.progressbar.ProgressBarWidget;
+import com.scarlatti.swingutils.progressbar.ProgressBarUi;
 import com.scarlatti.swingutils.text.MultilineTextWidget;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -14,7 +14,6 @@ import javax.swing.*;
 
 import java.nio.file.Paths;
 
-import static com.scarlatti.swingutils.SwingUtils.sleep;
 import static com.scarlatti.swingutils.decision.YesNoWidget.DisplayMode.CHECKBOX;
 import static com.scarlatti.swingutils.file.FileChooserWidget.FileType.DIRECTORY;
 import static com.scarlatti.swingutils.file.FileChooserWidget.Mode.SAVE;
@@ -80,7 +79,7 @@ public class WizardWidgetTest {
                 rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
                 rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
                 rowsWidget.addRow(FileChoosers.openFileWidget().getUi());
-//                rowsWidget.addRow(new ProgressBarWidget(progressBarWidget -> {
+//                rowsWidget.addRow(new ProgressBarUi(progressBarWidget -> {
 //                    progressBarWidget.getProgressBarTemplate().setWork(() -> {
 //                        sleep(1000);
 //                    });
@@ -106,9 +105,9 @@ public class WizardWidgetTest {
                         "This is a really dangerous task that has a really long description.\n" +
                             "It may take as long to execute this task as it does to read about it."
                     ).getUi());
-                    rowsWidget.addRow(new ProgressBarWidget((progressBarWidget -> {
-                        progressBarWidget.setRepeatable(true);
-//                        progressBarWidget.getProgressBarTemplate().setWork(() -> {
+                    rowsWidget.addRow(new ProgressBarUi((progressBarUi -> {
+                        progressBarUi.setRepeatable(true);
+//                        progressBarUi.getProgressBarTemplate().setWork(() -> {
 //                            sleep(3000);
 //                        });
                     })).getUi());
@@ -171,13 +170,13 @@ public class WizardWidgetTest {
                         })
                     );
                     rowsWidget.addRow(
-                        ProgressBarWidget.ui(progressBarWidget -> {
-                            progressBarWidget.setRepeatable(false);
-//                            progressBarWidget.getProgressBarTemplate().setWork(() -> {
+                        ProgressBarUi.ui(progressBarUi -> {
+                            progressBarUi.setRepeatable(false);
+//                            progressBarUi.getProgressBarTemplate().setWork(() -> {
 //                                sleep(3000);
 //                            });
-                            progressBarWidget.setTitle("Dangerous Task");
-                            progressBarWidget.setMessage("When you are ready click Start.  It may be very dangerous, so watch out!");
+                            progressBarUi.setTitle("Dangerous Task");
+                            progressBarUi.setMessage("When you are ready click Start.  It may be very dangerous, so watch out!");
                         })
                     );
                 });
