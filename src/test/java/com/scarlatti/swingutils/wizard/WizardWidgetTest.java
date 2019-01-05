@@ -6,6 +6,7 @@ import com.scarlatti.swingutils.file.*;
 import com.scarlatti.swingutils.flow.FlowWidget;
 import com.scarlatti.swingutils.grid.RowsWidget;
 import com.scarlatti.swingutils.progressbar.ProgressBarUi;
+import com.scarlatti.swingutils.progressbar.ProgressBarWidget;
 import com.scarlatti.swingutils.text.MultilineTextWidget;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -14,6 +15,7 @@ import javax.swing.*;
 
 import java.nio.file.Paths;
 
+import static com.scarlatti.swingutils.SwingUtils.sleep;
 import static com.scarlatti.swingutils.decision.YesNoWidget.DisplayMode.CHECKBOX;
 import static com.scarlatti.swingutils.file.FileChooserWidget.FileType.DIRECTORY;
 import static com.scarlatti.swingutils.file.FileChooserWidget.Mode.SAVE;
@@ -170,11 +172,11 @@ public class WizardWidgetTest {
                         })
                     );
                     rowsWidget.addRow(
-                        ProgressBarUi.ui(progressBarUi -> {
+                        ProgressBarWidget.ui2(progressBarUi -> {
                             progressBarUi.setRepeatable(false);
-//                            progressBarUi.getProgressBarTemplate().setWork(() -> {
-//                                sleep(3000);
-//                            });
+                            progressBarUi.getTaskTemplate().setWork(() -> {
+                                sleep(3000);
+                            });
                             progressBarUi.setTitle("Dangerous Task");
                             progressBarUi.setMessage("When you are ready click Start.  It may be very dangerous, so watch out!");
                         })

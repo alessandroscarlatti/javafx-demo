@@ -157,6 +157,7 @@ public class YesNoWidget implements Widget {
         choiceCheckBox.setSelected(choice);
 
         choiceCheckBox.addActionListener(e -> {
+            // todo this is where we would notify things...
             choice = choiceCheckBox.isSelected();
         });
 

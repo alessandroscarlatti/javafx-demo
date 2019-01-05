@@ -78,7 +78,7 @@ public class TaskTemplate {
             @Override
             public void start() {
                 executor.execute(() -> {
-                    invokeWorkWithProgressBar();
+                    invokeWorkAndBlock();
                 });
             }
 
@@ -95,13 +95,13 @@ public class TaskTemplate {
 
     void execute(Runnable runnableWork) {
         setWork(runnableWork);
-        invokeWorkWithProgressBar();
+        invokeWorkAndBlock();
     }
 
     @SuppressWarnings("unchecked")
     <T> T execute(Callable<T> callableWork) {
         setWork(callableWork);
-        return (T) invokeWorkWithProgressBar();
+        return (T) invokeWorkAndBlock();
     }
 
     /**
@@ -110,7 +110,7 @@ public class TaskTemplate {
      * @return the result of this work, if any.
      * @throws any exceptions thrown by the underlying invocation of the work.
      */
-    public Object invokeWorkWithProgressBar() {
+    public Object invokeWorkAndBlock() {
         result = null;
         exception = null;
         try {

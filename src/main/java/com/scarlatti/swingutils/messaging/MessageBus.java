@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * @author Alessandro Scarlatti
@@ -146,6 +147,133 @@ public class MessageBus {
             topic.name = name;
             topic.messageClazz = messageClazz;
             return topic;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public Class<MessageClazz> getMessageClazz() {
+            return messageClazz;
+        }
+    }
+
+    public static class Binding<FromTopicT, ToTopicT> {
+        private MessageBus fromMessageBus;
+        private MessageBus toMessageBus;
+        private Topic<FromTopicT> fromTopic;
+        private Topic<ToTopicT> toTopic;
+        private FromTopicT fromTopicSubscriber;
+        private ToTopicT toTopicPublisher;
+        private Function<ToTopicT, FromTopicT> fromTopicSubscriberFunc;
+        private Connection connection;
+        private boolean bound;
+
+        public static <FromTopicT, ToTopicT extends FromTopicT> Binding<FromTopicT, ToTopicT> bind(
+            Topic<FromTopicT> fromTopic,
+            Topic<ToTopicT> toTopic,
+            MessageBus messageBus
+        ) {
+            return Binding.bind(
+                fromTopic,
+                toTopic,
+                messageBus,
+                messageBus
+            );
+        }
+
+        public static <FromTopicT, ToTopicT extends FromTopicT> Binding<FromTopicT, ToTopicT> bind(
+            Topic<FromTopicT> fromTopic,
+            Topic<ToTopicT> toTopic,
+            MessageBus fromMessageBus,
+            MessageBus toMessageBus
+        ) {
+
+            // use default binding function for binding like types
+            return Binding.bind(
+                fromTopic,
+                toTopic,
+                fromMessageBus,
+                toMessageBus,
+                bindLikeTopicsAtoB(fromTopic, toTopic)
+            );
+        }
+
+        public static <FromTopicT, ToTopicT> Binding<FromTopicT, ToTopicT> bind(
+            Topic<FromTopicT> fromTopic,
+            Topic<ToTopicT> toTopic,
+            MessageBus messageBus,
+            Function<ToTopicT, FromTopicT> fromTopicSubscriberFunc
+        ) {
+            return Binding.bind(
+                fromTopic,
+                toTopic,
+                messageBus,
+                messageBus,
+                fromTopicSubscriberFunc
+            );
+        }
+
+        public static <FromTopicT, ToTopicT> Binding<FromTopicT, ToTopicT> bind(
+            Topic<FromTopicT> fromTopic,
+            Topic<ToTopicT> toTopic,
+            MessageBus fromMessageBus,
+            MessageBus toMessageBus,
+            Function<ToTopicT, FromTopicT> fromTopicSubscriberFunc
+        ) {
+            Binding<FromTopicT, ToTopicT> binding = new Binding<>();
+            binding.fromTopic = fromTopic;
+            binding.toTopic = toTopic;
+            binding.fromMessageBus = fromMessageBus;
+            binding.toMessageBus = toMessageBus;
+            binding.fromTopicSubscriberFunc = fromTopicSubscriberFunc;
+            binding.bind();
+            return binding;
+        }
+
+        @SuppressWarnings("unchecked")
+        private static <FromTopicT, ToTopicT extends FromTopicT> Function<ToTopicT, FromTopicT> bindLikeTopicsAtoB(
+            Topic<FromTopicT> topic1,
+            Topic<ToTopicT> topic2
+        ) {
+            return publisher -> {
+                return (FromTopicT) Proxy.newProxyInstance(
+                    Thread.currentThread().getContextClassLoader(),
+                    new Class[]{topic1.getMessageClazz()},
+                    (proxy, method, args) -> {
+                        return method.invoke(publisher, args);
+                    }
+                );
+            };
+        }
+
+        @Override
+        public String toString() {
+            return "Binding{" +
+                "fromMessageBus=" + fromMessageBus +
+                ", toMessageBus=" + toMessageBus +
+                ", fromTopic=" + fromTopic +
+                ", toTopic=" + toTopic +
+                ", fromTopicSubscriber=" + fromTopicSubscriber +
+                ", toTopicPublisher=" + toTopicPublisher +
+                '}';
+        }
+
+        public void unbind() {
+            if (bound) {
+                connection.disconnect();
+                bound = false;
+            }
+        }
+
+        public void bind() {
+            if (!bound) {
+                toTopicPublisher = toMessageBus.syncPublisher(toTopic);
+                fromTopicSubscriber = fromTopicSubscriberFunc.apply(toTopicPublisher);
+                connection = fromMessageBus.connect();
+                connection.subscribe(fromTopic, fromTopicSubscriber);
+                bound = true;
+            }
         }
     }
 }
