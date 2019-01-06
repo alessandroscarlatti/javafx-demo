@@ -165,7 +165,7 @@ public class MessageBus {
         private Topic<ToTopicT> toTopic;
         private FromTopicT fromTopicSubscriber;
         private ToTopicT toTopicPublisher;
-        private Function<ToTopicT, FromTopicT> fromTopicSubscriberFunc;
+        private Function<ToTopicT, FromTopicT> fromTopicSubscriberFactoryFunc;
         private Connection connection;
         private boolean bound;
 
@@ -203,14 +203,14 @@ public class MessageBus {
             Topic<FromTopicT> fromTopic,
             Topic<ToTopicT> toTopic,
             MessageBus messageBus,
-            Function<ToTopicT, FromTopicT> fromTopicSubscriberFunc
+            Function<ToTopicT, FromTopicT> fromTopicSubscriberFactoryFunc
         ) {
             return Binding.bind(
                 fromTopic,
                 toTopic,
                 messageBus,
                 messageBus,
-                fromTopicSubscriberFunc
+                fromTopicSubscriberFactoryFunc
             );
         }
 
@@ -219,14 +219,14 @@ public class MessageBus {
             Topic<ToTopicT> toTopic,
             MessageBus fromMessageBus,
             MessageBus toMessageBus,
-            Function<ToTopicT, FromTopicT> fromTopicSubscriberFunc
+            Function<ToTopicT, FromTopicT> fromTopicSubscriberFactoryFunc
         ) {
             Binding<FromTopicT, ToTopicT> binding = new Binding<>();
             binding.fromTopic = fromTopic;
             binding.toTopic = toTopic;
             binding.fromMessageBus = fromMessageBus;
             binding.toMessageBus = toMessageBus;
-            binding.fromTopicSubscriberFunc = fromTopicSubscriberFunc;
+            binding.fromTopicSubscriberFactoryFunc = fromTopicSubscriberFactoryFunc;
             binding.bind();
             return binding;
         }
@@ -236,15 +236,14 @@ public class MessageBus {
             Topic<FromTopicT> topic1,
             Topic<ToTopicT> topic2
         ) {
-            return publisher -> {
-                return (FromTopicT) Proxy.newProxyInstance(
+            return publisher ->
+                (FromTopicT) Proxy.newProxyInstance(
                     Thread.currentThread().getContextClassLoader(),
                     new Class[]{topic1.getMessageClazz()},
                     (proxy, method, args) -> {
                         return method.invoke(publisher, args);
                     }
                 );
-            };
         }
 
         @Override
@@ -269,7 +268,7 @@ public class MessageBus {
         public void bind() {
             if (!bound) {
                 toTopicPublisher = toMessageBus.syncPublisher(toTopic);
-                fromTopicSubscriber = fromTopicSubscriberFunc.apply(toTopicPublisher);
+                fromTopicSubscriber = fromTopicSubscriberFactoryFunc.apply(toTopicPublisher);
                 connection = fromMessageBus.connect();
                 connection.subscribe(fromTopic, fromTopicSubscriber);
                 bound = true;

@@ -6,7 +6,7 @@ import com.scarlatti.swingutils.file.*;
 import com.scarlatti.swingutils.flow.FlowWidget;
 import com.scarlatti.swingutils.grid.RowsWidget;
 import com.scarlatti.swingutils.progressbar.ProgressBarUi;
-import com.scarlatti.swingutils.progressbar.ProgressBarWidget;
+import com.scarlatti.swingutils.progressbar.ProgressBarWidgetOld;
 import com.scarlatti.swingutils.text.MultilineTextWidget;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -172,13 +172,13 @@ public class WizardWidgetTest {
                         })
                     );
                     rowsWidget.addRow(
-                        ProgressBarWidget.ui2(progressBarUi -> {
-                            progressBarUi.setRepeatable(false);
-                            progressBarUi.getTaskTemplate().setWork(() -> {
+                        ProgressBarWidgetOld.ui2(progressBarWidget -> {
+                            progressBarWidget.setRepeatable(false);
+                            progressBarWidget.getTaskTemplate().setWork(() -> {
                                 sleep(3000);
                             });
-                            progressBarUi.setTitle("Dangerous Task");
-                            progressBarUi.setMessage("When you are ready click Start.  It may be very dangerous, so watch out!");
+                            progressBarWidget.setTitle("Dangerous Task");
+                            progressBarWidget.setMessage("When you are ready click Start.  It may be very dangerous, so watch out!");
                         })
                     );
                 });

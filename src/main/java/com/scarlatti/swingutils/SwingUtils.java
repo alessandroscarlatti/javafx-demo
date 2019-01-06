@@ -8,7 +8,10 @@ import java.awt.event.WindowEvent;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -21,10 +24,33 @@ import java.util.function.Supplier;
 public class SwingUtils {
 
     public static void display(Container uiComponent) {
-        display(() -> uiComponent);
+        display(() -> uiComponent, null);
     }
 
     public static void display(Supplier<Container> uiComponentSupplier) {
+        display(uiComponentSupplier.get());
+    }
+
+    public static void display(Function<DisplayProps, Container> uiComponentFunc) {
+        DisplayProps displayProps = new DisplayProps();
+        Container ui = uiComponentFunc.apply(displayProps);
+        display(() -> ui, displayProps.getCallback());
+    }
+
+    public static class DisplayProps {
+        private Runnable callback;
+
+        public Runnable getCallback() {
+            return callback;
+        }
+
+        public void setCallback(Runnable callback) {
+            this.callback = callback;
+        }
+    }
+
+
+    public static void display(Supplier<Container> uiComponentSupplier, Runnable callback) {
         // create a new frame
         JFrame frame = new JFrame("Demo");
 
@@ -36,6 +62,11 @@ public class SwingUtils {
         frame.pack();
         frame.revalidate();
         frame.setVisible(true);
+
+        // now run any callback
+        if (callback != null) {
+            Executors.newSingleThreadExecutor().execute(callback);
+        }
 
         CountDownLatch latch = new CountDownLatch(1);
         frame.addWindowListener(new WindowAdapter() {

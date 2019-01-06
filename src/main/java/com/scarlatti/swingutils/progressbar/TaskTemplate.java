@@ -11,8 +11,8 @@ import java.util.function.Consumer;
  * @since Wednesday, 1/2/2019
  */
 public class TaskTemplate {
-    private Topic<TaskTemplateEventsNotifier> eventsTopic;
-    private Topic<TaskTemplateCommandsNotifier> commandsTopic;
+    private Topic<TaskTemplateEvents> eventsTopic;
+    private Topic<TaskTemplateApi> commandsTopic;
     private ExecutorService executor = Executors.newFixedThreadPool(4);
 
     private String name = "task@" + Integer.toHexString(System.identityHashCode(this));
@@ -22,7 +22,7 @@ public class TaskTemplate {
     private Callable<?> callableWork = this::doCallableWork;
     private Object result = null;
     private Exception exception = null;
-    private TaskTemplateEventsNotifier eventsNotifier = new TaskTemplateEventsNotifier() {};
+    private TaskTemplateEvents eventsNotifier = new TaskTemplateEvents() {};
 
     public void setMaxDurationMs(long maxDurationMs) {
         this.maxDurationMs = maxDurationMs;
@@ -54,16 +54,16 @@ public class TaskTemplate {
         return taskTemplate;
     }
 
-    public Topic<TaskTemplateEventsNotifier> getEventsTopic() {
+    public Topic<TaskTemplateEvents> getEventsTopic() {
         if (eventsTopic == null)
-            eventsTopic = Topic.create(name + ".events", TaskTemplateEventsNotifier.class);
+            eventsTopic = Topic.create(name + ".events", TaskTemplateEvents.class);
 
         return eventsTopic;
     }
 
-    public Topic<TaskTemplateCommandsNotifier> getApiTopic() {
+    public Topic<TaskTemplateApi> getApiTopic() {
         if (commandsTopic == null)
-            commandsTopic = Topic.create(name + ".api", TaskTemplateCommandsNotifier.class);
+            commandsTopic = Topic.create(name + ".api", TaskTemplateApi.class);
 
         return commandsTopic;
     }
@@ -73,8 +73,8 @@ public class TaskTemplate {
         subscribeToEvents(bus, getApiTopic());
     }
 
-    public void subscribeToEvents(MessageBus bus, Topic<TaskTemplateCommandsNotifier> commandsNotifierTopic) {
-        bus.connect().subscribe(commandsNotifierTopic, new TaskTemplateCommandsNotifier() {
+    public void subscribeToEvents(MessageBus bus, Topic<TaskTemplateApi> commandsNotifierTopic) {
+        bus.connect().subscribe(commandsNotifierTopic, new TaskTemplateApi() {
             @Override
             public void start() {
                 executor.execute(() -> {
@@ -162,7 +162,7 @@ public class TaskTemplate {
         return exception;
     }
 
-    public void setEventsNotifier(TaskTemplateEventsNotifier eventsNotifier) {
+    public void setEventsNotifier(TaskTemplateEvents eventsNotifier) {
         this.eventsNotifier = eventsNotifier;
     }
 
@@ -170,7 +170,7 @@ public class TaskTemplate {
         this.name = name;
     }
 
-    public interface TaskTemplateCommandsNotifier {
+    public interface TaskTemplateApi {
         default void start() {
         }
 
@@ -178,7 +178,7 @@ public class TaskTemplate {
         }
     }
 
-    public interface TaskTemplateEventsNotifier {
+    public interface TaskTemplateEvents {
         default void started() {
         }
 

@@ -4,8 +4,8 @@ import com.scarlatti.swingutils.Widget;
 import com.scarlatti.swingutils.exception.ExceptionViewerWidget;
 import com.scarlatti.swingutils.messaging.MessageBus;
 import com.scarlatti.swingutils.messaging.MessageBus.Topic;
-import com.scarlatti.swingutils.progressbar.TaskTemplate.TaskTemplateCommandsNotifier;
-import com.scarlatti.swingutils.progressbar.TaskTemplate.TaskTemplateEventsNotifier;
+import com.scarlatti.swingutils.progressbar.TaskTemplate.TaskTemplateApi;
+import com.scarlatti.swingutils.progressbar.TaskTemplate.TaskTemplateEvents;
 import com.scarlatti.swingutils.text.MultilineTextWidget;
 
 import javax.swing.*;
@@ -39,7 +39,7 @@ public class ProgressBarUi implements Widget {
     private ProgressBarUI successProgressBarUi;
     private JPanel widgetPanel;
     private JButton statusButton;
-    private TaskTemplateCommandsNotifier taskCommandsNotifier = new TaskTemplateCommandsNotifier() {};
+    private TaskTemplateApi taskCommandsNotifier = new TaskTemplateApi() {};
     private ExecutorService executor = Executors.newFixedThreadPool(10);
 
     private boolean selfStartable = true;
@@ -105,20 +105,20 @@ public class ProgressBarUi implements Widget {
         return new ProgressBarUi(config).getUi();
     }
 
-    public void connectEvents(MessageBus bus, Topic<TaskTemplateEventsNotifier> eventsTopic) {
+    public void connectEvents(MessageBus bus, Topic<TaskTemplateEvents> eventsTopic) {
         subscribeToEvents(bus, eventsTopic);
     }
 
-    public void connectApi(MessageBus bus, Topic<TaskTemplateCommandsNotifier> commandsTopic) {
+    public void connectApi(MessageBus bus, Topic<TaskTemplateApi> commandsTopic) {
         createPublisher(bus, commandsTopic);
     }
 
-    private void createPublisher(MessageBus bus, Topic<TaskTemplateCommandsNotifier> commandsTopic) {
+    private void createPublisher(MessageBus bus, Topic<TaskTemplateApi> commandsTopic) {
         taskCommandsNotifier = bus.syncPublisher(commandsTopic);
     }
 
-    private void subscribeToEvents(MessageBus bus, Topic<TaskTemplateEventsNotifier> eventsTopic) {
-        bus.connect().subscribe(eventsTopic, new TaskTemplateEventsNotifier() {
+    private void subscribeToEvents(MessageBus bus, Topic<TaskTemplateEvents> eventsTopic) {
+        bus.connect().subscribe(eventsTopic, new TaskTemplateEvents() {
             @Override
             public void started() {
                 taskState = TaskState.IN_PROGRESS;

@@ -54,7 +54,7 @@ public class ProgressBarUiTest {
         // the specific runnable or callable will be defined in the
         // business area of the code...
         SwingUtils.display(
-            ProgressBarWidget.ui2(progressBarWidget -> {
+            ProgressBarWidgetOld.ui2(progressBarWidget -> {
                 progressBarWidget.getTaskTemplate().setWork(() -> {
                     sleep(2000);
                 });
@@ -71,7 +71,7 @@ public class ProgressBarUiTest {
             });
         });
 
-        bus.connect().subscribe(taskTemplate.getEventsTopic(), new TaskTemplate.TaskTemplateEventsNotifier() {
+        bus.connect().subscribe(taskTemplate.getEventsTopic(), new TaskTemplate.TaskTemplateEvents() {
             @Override
             public void started() {
                 System.out.println("ProgressBarUiTest.started() ");
@@ -81,7 +81,7 @@ public class ProgressBarUiTest {
         // the specific runnable or callable will be defined in the
         // business area of the code...
         SwingUtils.display(
-            ProgressBarWidget.ui2(progressBarWidget -> {
+            ProgressBarWidgetOld.ui2(progressBarWidget -> {
                 progressBarWidget.setMessageBus(bus);
                 progressBarWidget.setTaskTemplate(taskTemplate);
             })
@@ -115,7 +115,7 @@ public class ProgressBarUiTest {
     @Test
     public void progressBarWithTaskStartedExternally() {
 
-        ProgressBarWidget progressBarWidget = new ProgressBarWidget();
+        ProgressBarWidgetOld progressBarWidget = new ProgressBarWidgetOld();
         progressBarWidget.connect();
 
         SwingUtils.display(() -> {
@@ -129,7 +129,7 @@ public class ProgressBarUiTest {
     @Test
     public void progressBarWithTaskStartedExternallyCanPickUpReturnValueLater() {
 
-        ProgressBarWidget progressBarWidget = new ProgressBarWidget(widget -> {
+        ProgressBarWidgetOld progressBarWidget = new ProgressBarWidgetOld(widget -> {
             widget.getTaskTemplate().setWork(() -> {
                 sleep(2000);
                 return "asdf";
@@ -153,7 +153,7 @@ public class ProgressBarUiTest {
 
     @Test
     public void progressBarWithNonSelfStartableTask() {
-        ProgressBarWidget progressBarWidget = new ProgressBarWidget(widget -> {
+        ProgressBarWidgetOld progressBarWidget = new ProgressBarWidgetOld(widget -> {
             widget.setSelfStartable(false);
             widget.getTaskTemplate().setWork(() -> {
                 sleep(2000);
@@ -171,7 +171,7 @@ public class ProgressBarUiTest {
 
     @Test
     public void progressBarWithRepeatableTask() {
-        ProgressBarWidget progressBarWidget = new ProgressBarWidget(widget -> {
+        ProgressBarWidgetOld progressBarWidget = new ProgressBarWidgetOld(widget -> {
             widget.setSelfStartable(false);
             widget.setRepeatable(true);
             widget.getTaskTemplate().setWork(() -> {
@@ -191,7 +191,7 @@ public class ProgressBarUiTest {
 
     @Test
     public void progressBarWithNonCancelableTask() {
-        ProgressBarWidget progressBarWidget = new ProgressBarWidget(widget -> {
+        ProgressBarWidgetOld progressBarWidget = new ProgressBarWidgetOld(widget -> {
             widget.setSelfStartable(true);
             widget.setRepeatable(true);
             widget.setCancelable(false);
@@ -212,7 +212,7 @@ public class ProgressBarUiTest {
     @Test
     public void progressBarWithTitleAndMessage() {
         SwingUtils.display(
-            ProgressBarWidget.ui2(progressBarWidget -> {
+            ProgressBarWidgetOld.ui2(progressBarWidget -> {
                 progressBarWidget.getTaskTemplate().setWork(() -> {
                     sleep(1000);
                 });
@@ -235,7 +235,7 @@ public class ProgressBarUiTest {
         });
     }
 
-    private JButton buttonForTriggeringProgressBarTask(ProgressBarWidget progressBarWidget) {
+    private JButton buttonForTriggeringProgressBarTask(ProgressBarWidgetOld progressBarWidget) {
         JButton jButton = new JButton("Execute Task");
         jButton.addActionListener((e -> {
             Executors.newFixedThreadPool(1).execute(() -> {
