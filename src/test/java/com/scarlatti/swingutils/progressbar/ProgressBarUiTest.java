@@ -38,7 +38,7 @@ public class ProgressBarUiTest {
         // business area of the code...
         TaskTemplate taskTemplate = TaskTemplate.task(task -> {
             task.setWork(this::longTask);
-            task.connect(bus);
+            task.connectAs("task", bus);
         });
 
         SwingUtils.display(

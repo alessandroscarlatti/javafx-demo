@@ -35,7 +35,7 @@ public class ProgressBarWidgetOld extends ProgressBarUi {
             messageBus = new MessageBus();
         }
 
-        getTaskTemplate().connect(messageBus);
+        getTaskTemplate().connectAs("task", messageBus);
         connectApi(messageBus, getTaskTemplate().getApiTopic());
         connectEvents(messageBus, getTaskTemplate().getEventsTopic());
     }

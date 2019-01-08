@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 public class TaskTemplate {
     private Topic<TaskTemplateEvents> eventsTopic;
     private Topic<TaskTemplateApi> commandsTopic;
+    private MessageBus messageBus = new MessageBus();
     private ExecutorService executor = Executors.newFixedThreadPool(4);
 
     private String name = "task@" + Integer.toHexString(System.identityHashCode(this));
@@ -44,6 +45,7 @@ public class TaskTemplate {
     public static TaskTemplate task(Consumer<TaskTemplate> config) {
         TaskTemplate taskTemplate = new TaskTemplate();
         config.accept(taskTemplate);
+        taskTemplate.connect();
         return taskTemplate;
     }
 
@@ -51,6 +53,7 @@ public class TaskTemplate {
         TaskTemplate taskTemplate = new TaskTemplate();
         taskTemplate.setName(name);
         config.accept(taskTemplate);
+        taskTemplate.connect();
         return taskTemplate;
     }
 
@@ -68,9 +71,19 @@ public class TaskTemplate {
         return commandsTopic;
     }
 
-    public void connect(MessageBus bus) {
-        eventsNotifier = bus.syncPublisher(getEventsTopic());
-        subscribeToEvents(bus, getApiTopic());
+//    public void connect(MessageBus bus) {
+//        eventsNotifier = bus.syncPublisher(getEventsTopic());
+//        subscribeToEvents(bus, getApiTopic());
+//    }
+
+    private void connect() {
+        eventsNotifier = messageBus.syncPublisher(getEventsTopic());
+        subscribeToEvents(messageBus, getApiTopic());
+    }
+
+    public void connectAs(String name, MessageBus messageBus) {
+        this.name = name;
+        this.messageBus = messageBus;
     }
 
     public void subscribeToEvents(MessageBus bus, Topic<TaskTemplateApi> commandsNotifierTopic) {
