@@ -190,15 +190,13 @@ public class TaskProgressBarWidget implements Widget {
         // bind the actual progress bar and status button topics
         // to the task progress bar's topics so that they function as "aliases".
         // this will facilitate "taskProgressBar.progressBar.api"
-        // use #bindLikeTopicsAtoB
         Topic<ProgressBarWidgetApi> aliasProgressBarApiTopic = Topic.create(name + ".progressBar.api", ProgressBarWidgetApi.class);
         Topic<TaskTemplateApi> aliasTaskTemplateApiTopic = Topic.create(name + ".taskTemplate.api", TaskTemplateApi.class);
         Topic<TaskTemplateEvents> aliasTaskTemplateEventsTopic = Topic.create(name + ".taskTemplate.events", TaskTemplateEvents.class);
-//        Topic<TaskTemplateEvents> aliasStatusButtonWidgetEventsTopic = Topic.create(name + ".statusButton.events", TaskTemplateEvents.class);
 
         bind(aliasProgressBarApiTopic, progressBarApiTopic, messageBus, progressBarWidget.getMessageBus());
         bind(aliasTaskTemplateApiTopic, taskTemplateApiTopic, messageBus, progressBarWidget.getMessageBus());
-        bind(taskTemplateEventsTopic, aliasTaskTemplateEventsTopic, messageBus, taskTemplate.getMessageBus());
+        bind(taskTemplateEventsTopic, aliasTaskTemplateEventsTopic, taskTemplate.getMessageBus(), messageBus);
 
         // publisher
         progressBarWidgetApi = progressBarWidget.getMessageBus().syncPublisher(progressBarApiTopic);
@@ -353,6 +351,14 @@ public class TaskProgressBarWidget implements Widget {
 
     public void setProgressBarWidget(ProgressBarWidget progressBarWidget) {
         this.progressBarWidget = progressBarWidget;
+    }
+
+    public MessageBus getMessageBus() {
+        return messageBus;
+    }
+
+    public void setMessageBus(MessageBus messageBus) {
+        this.messageBus = messageBus;
     }
 
     public void setMessage(String message) {
