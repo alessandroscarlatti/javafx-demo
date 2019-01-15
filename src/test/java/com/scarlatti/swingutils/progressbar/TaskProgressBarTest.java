@@ -21,15 +21,12 @@ public class TaskProgressBarTest {
 
     @Test
     public void taskTemplateProgressBar() {
-        MessageBus messageBus = new MessageBus();
-
         SwingUtils.display(
             RowsWidget.ui(rowsWidget -> {
                 rowsWidget.addRow(
                     TaskProgressBarWidget.ui(taskProgressBarWidget -> {
                         taskProgressBarWidget.setRepeatable(true);
                         taskProgressBarWidget.setCancelable(false);
-                        taskProgressBarWidget.connectAs("taskProgressBarWidget", messageBus);
                         taskProgressBarWidget.setTaskTemplate(
                             TaskTemplate.task(taskTemplate -> {
                                 taskTemplate.setWork(() -> {
@@ -37,7 +34,6 @@ public class TaskProgressBarTest {
                                     sleep(3000);
                                     System.out.println("end");
                                 });
-                                taskTemplate.connectAs("task", messageBus);
                             })
                         );
                     })

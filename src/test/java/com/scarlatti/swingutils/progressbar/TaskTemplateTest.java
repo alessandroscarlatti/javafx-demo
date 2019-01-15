@@ -4,7 +4,7 @@ import com.scarlatti.swingutils.SwingUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static com.scarlatti.swingutils.SwingUtils.sleep;
 
 /**
  * @author Alessandro Scarlatti
@@ -20,6 +20,13 @@ public class TaskTemplateTest {
     public void showTaskProgressBarTemplate() {
         SwingUtils.display(
             TaskProgressBarWidget.ui(taskProgressBarWidget -> {
+                taskProgressBarWidget.setTaskTemplate(
+                    TaskTemplate.task(taskTemplate -> {
+                        taskTemplate.setWork(() -> {
+                            sleep(2000);
+                        });
+                    })
+                );
                 taskProgressBarWidget.setTitle("Task 1");
                 taskProgressBarWidget.setMessage("This is a long task.");
             })

@@ -81,6 +81,14 @@ public class TaskTemplate {
         subscribeToEvents(messageBus, getApiTopic());
     }
 
+    public void setMessageBus(MessageBus messageBus) {
+        this.messageBus = messageBus;
+    }
+
+    public MessageBus getMessageBus() {
+        return messageBus;
+    }
+
     public void connectAs(String name, MessageBus messageBus) {
         this.name = name;
         this.messageBus = messageBus;

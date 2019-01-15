@@ -5,6 +5,7 @@ import com.scarlatti.swingutils.button.ButtonWidget;
 import com.scarlatti.swingutils.button.ButtonWidget.ButtonWidgetApi;
 import com.scarlatti.swingutils.button.ButtonWidget.ButtonWidgetEvents;
 import com.scarlatti.swingutils.messaging.MessageBus;
+import com.scarlatti.swingutils.messaging.MessageBus.Binding;
 import com.scarlatti.swingutils.messaging.MessageBus.Connection;
 import com.scarlatti.swingutils.messaging.MessageBus.Topic;
 import com.scarlatti.swingutils.progressbar.ProgressBarWidget.ProgressBarWidgetApi;
@@ -17,6 +18,7 @@ import java.awt.*;
 import java.util.function.Consumer;
 
 import static com.scarlatti.swingutils.SwingUtils.makeBold;
+import static com.scarlatti.swingutils.messaging.MessageBus.Binding.bind;
 import static com.scarlatti.swingutils.messaging.MessagingUtils.createName;
 
 /**
@@ -27,8 +29,8 @@ public class TaskProgressBarWidget implements Widget {
 
     private TaskTemplate taskTemplate = defaultTaskTemplate();
     private ProgressBarWidget progressBarWidget = defaultProgressBarWidget();
+    private ButtonWidget statusButtonWidget = defaultStatusButtonWidget();
     private JPanel widgetPanel;
-    private ButtonWidget statusButtonWidget;
     private String title;
     private String message;
     private boolean selfStartable = true;
@@ -57,14 +59,16 @@ public class TaskProgressBarWidget implements Widget {
 
     @Override
     public Container getUi() {
+        if (widgetPanel == null) {
+            initMessaging();
+            initUi();
+        }
+
+        return widgetPanel;
+    }
+
+    private void initUi() {
         widgetPanel = new JPanel();
-
-        statusButtonWidget = new ButtonWidget(buttonWidget -> {
-            buttonWidget.setText("Start");
-            buttonWidget.connectAs(name + ".statusButton", messageBus);
-        });
-
-        progressBarWidget.connectAs(name + ".progressBar", messageBus);
 
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(makeBold(titleLabel.getFont()));
@@ -105,14 +109,11 @@ public class TaskProgressBarWidget implements Widget {
         gl.setVerticalGroup(widgetVGroup);
 
         configureStatusButtonByState();
-        initMessaging();
-        return widgetPanel;
     }
 
     private void configureStatusButtonByState() {
 
-        Topic<ButtonWidgetApi> buttonWidgetApiTopic = Topic.create(statusButtonWidget.getName() + ".api", ButtonWidgetApi.class);
-        ButtonWidgetApi buttonWidgetApi = messageBus.syncPublisher(buttonWidgetApiTopic);
+        ButtonWidgetApi buttonWidgetApi = statusButtonWidget.getMessageBus().syncPublisher(statusButtonWidget.getApiTopic());
 
         SwingUtilities.invokeLater(() -> {
             switch (taskState) {
@@ -179,23 +180,33 @@ public class TaskProgressBarWidget implements Widget {
     }
 
     private void initMessaging() {
-        // now set up the messaging component...
+        // now set up the messaging components...
+
         // progress bar
-        Topic<ProgressBarWidgetApi> progressBarApiTopic = Topic.create(progressBarWidget.getName() + ".api", ProgressBarWidgetApi.class);
-        // task template
+        Topic<ProgressBarWidgetApi> progressBarApiTopic = progressBarWidget.getApiTopic();
         Topic<TaskTemplateApi> taskTemplateApiTopic = taskTemplate.getApiTopic();
         Topic<TaskTemplateEvents> taskTemplateEventsTopic = taskTemplate.getEventsTopic();
-        // button
-        Topic<ButtonWidgetEvents> buttonEventsTopic = Topic.create(statusButtonWidget.getName() + ".events", ButtonWidgetEvents.class);
+
+        // bind the actual progress bar and status button topics
+        // to the task progress bar's topics so that they function as "aliases".
+        // this will facilitate "taskProgressBar.progressBar.api"
+        // use #bindLikeTopicsAtoB
+        Topic<ProgressBarWidgetApi> aliasProgressBarApiTopic = Topic.create(name + ".progressBar.api", ProgressBarWidgetApi.class);
+        Topic<TaskTemplateApi> aliasTaskTemplateApiTopic = Topic.create(name + ".taskTemplate.api", TaskTemplateApi.class);
+        Topic<TaskTemplateEvents> aliasTaskTemplateEventsTopic = Topic.create(name + ".taskTemplate.events", TaskTemplateEvents.class);
+//        Topic<TaskTemplateEvents> aliasStatusButtonWidgetEventsTopic = Topic.create(name + ".statusButton.events", TaskTemplateEvents.class);
+
+        bind(aliasProgressBarApiTopic, progressBarApiTopic, messageBus, progressBarWidget.getMessageBus());
+        bind(aliasTaskTemplateApiTopic, taskTemplateApiTopic, messageBus, progressBarWidget.getMessageBus());
+        bind(taskTemplateEventsTopic, aliasTaskTemplateEventsTopic, messageBus, taskTemplate.getMessageBus());
 
         // publisher
-        progressBarWidgetApi = messageBus.syncPublisher(progressBarApiTopic);
-        taskTemplateWidgetApi = messageBus.syncPublisher(taskTemplateApiTopic);
-
-        Connection connection = messageBus.connect();
+        progressBarWidgetApi = progressBarWidget.getMessageBus().syncPublisher(progressBarApiTopic);
+        taskTemplateWidgetApi = taskTemplate.getMessageBus().syncPublisher(taskTemplateApiTopic);
+        Connection buttonConnection = statusButtonWidget.getMessageBus().connect();
 
         // subscribe to the button
-        connection.subscribe(buttonEventsTopic, new ButtonWidgetEvents() {
+        buttonConnection.subscribe(statusButtonWidget.getEventsTopic(), new ButtonWidgetEvents() {
             @Override
             public void clicked() {
                 // disable the button, perhaps...
@@ -209,18 +220,20 @@ public class TaskProgressBarWidget implements Widget {
                     case CANCELLED:
                     case TIMED_OUT:
                     case FAILED:
-                        restart();
+                        if (retryable)
+                            restart();
                         break;
                     case COMPLETE:
-                        if (repeatable) {
+                        if (repeatable)
                             start();
-                        }
                         break;
                 }
             }
         });
 
-        connection.subscribe(taskTemplateEventsTopic, new TaskTemplateEvents() {
+        // listen to the task template events
+        Connection taskTemplateConnection = taskTemplate.getMessageBus().connect();
+        taskTemplateConnection.subscribe(taskTemplateEventsTopic, new TaskTemplateEvents() {
             @Override
             public void started() {
                 progressBarWidgetApi.start();
@@ -311,8 +324,15 @@ public class TaskProgressBarWidget implements Widget {
         taskTemplateWidgetApi.start();
     }
 
+    private ButtonWidget defaultStatusButtonWidget() {
+        return new ButtonWidget(buttonWidget -> {
+            buttonWidget.setText("Start");
+        });
+    }
+
     private ProgressBarWidget defaultProgressBarWidget() {
-        return new ProgressBarWidget(progressBarWidget -> {});
+        return new ProgressBarWidget(progressBarWidget -> {
+        });
     }
 
     private TaskTemplate defaultTaskTemplate() {

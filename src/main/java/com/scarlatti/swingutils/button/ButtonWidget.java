@@ -82,6 +82,22 @@ public class ButtonWidget implements Widget {
         this.name = name;
     }
 
+    public MessageBus getMessageBus() {
+        return messageBus;
+    }
+
+    public void setMessageBus(MessageBus messageBus) {
+        this.messageBus = messageBus;
+    }
+
+    public Topic<ButtonWidgetEvents> getEventsTopic() {
+        return Topic.create(name + ".events", ButtonWidgetEvents.class);
+    }
+
+    public Topic<ButtonWidgetApi> getApiTopic() {
+        return Topic.create(name + ".api", ButtonWidgetApi.class);
+    }
+
     public String getName() {
         return name;
     }
