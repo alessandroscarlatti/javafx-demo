@@ -8,13 +8,15 @@ import com.scarlatti.swingutils.progressbar.TaskTemplate.TaskTemplateEvents;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.time.Duration;
+
 import static com.scarlatti.swingutils.SwingUtils.sleep;
 
 /**
  * @author Alessandro Scarlatti
  * @since Monday, 1/7/2019
  */
-public class TaskProgressBarTest {
+public class TaskProgressBarWidgetTest {
 
     @BeforeClass
     public static void setup() {
@@ -34,7 +36,7 @@ public class TaskProgressBarTest {
             }
 
             @Override
-            public void completed(Object result) {
+            public void completed(Object result, Duration durationMs) {
                 System.out.println("completed");
             }
         });
@@ -74,7 +76,7 @@ public class TaskProgressBarTest {
             }
 
             @Override
-            public void completed(Object result) {
+            public void completed(Object result, Duration durationMs) {
                 System.out.println("completed");
             }
         });
@@ -114,6 +116,31 @@ public class TaskProgressBarTest {
                         });
                     })
                 );
+            })
+        );
+    }
+
+    @Test
+    public void progressBarWithInfo() {
+        SwingUtils.display(
+            TaskProgressBarWidget.ui(taskProgressBarWidget -> {
+                taskProgressBarWidget.setRepeatable(true);
+                taskProgressBarWidget.setCancelable(true);
+                taskProgressBarWidget.setRetryable(true);
+                taskProgressBarWidget.setTitle("Task 1");
+                taskProgressBarWidget.setMessage("Do Task 1");
+                taskProgressBarWidget.getTaskTemplate().setWork(() -> {
+                    System.out.println("start");
+                    sleep(750);
+                    System.out.println("end");
+                });
+//                taskProgressBarWidget.setInfoTextWidget(
+////                    new HtmlTextWidget(htmlTextWidget -> {
+////                        htmlTextWidget.setHtml(
+////                            "<html style='font-size: 10px;'>what do you know</html>"
+////                        );
+////                    })
+////                );
             })
         );
     }

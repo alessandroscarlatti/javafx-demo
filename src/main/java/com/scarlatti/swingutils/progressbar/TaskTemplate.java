@@ -3,6 +3,8 @@ package com.scarlatti.swingutils.progressbar;
 import com.scarlatti.swingutils.messaging.MessageBus;
 import com.scarlatti.swingutils.messaging.MessageBus.Topic;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
@@ -134,6 +136,7 @@ public class TaskTemplate {
     public Object invokeWorkAndBlock() {
         result = null;
         exception = null;
+        Instant startInstant = Instant.now();
         try {
             eventsNotifier.started();
 
@@ -146,25 +149,29 @@ public class TaskTemplate {
 
             // wait for the work task to finish
             result = workTask.get(maxDurationMs, TimeUnit.MILLISECONDS);
-            eventsNotifier.completed(result);
+            eventsNotifier.completed(result, calcDurationToNow(startInstant));
             return result;
         } catch (CancellationException e) {
             exception = e;
-            eventsNotifier.cancelled(e);
+            eventsNotifier.cancelled(e, calcDurationToNow(startInstant));
             throw new RuntimeException(e);
         } catch (InterruptedException e) {
             exception = e;
-            eventsNotifier.interrupted(e);
+            eventsNotifier.interrupted(e, calcDurationToNow(startInstant));
             throw new RuntimeException(e);
         } catch (ExecutionException e) {
             exception = e;
-            eventsNotifier.error(e);
+            eventsNotifier.error(e, calcDurationToNow(startInstant));
             throw new RuntimeException(e);
         } catch (TimeoutException e) {
             exception = e;
-            eventsNotifier.timedOut(e);
+            eventsNotifier.timedOut(e, calcDurationToNow(startInstant));
             throw new RuntimeException(e);
         }
+    }
+
+    private static Duration calcDurationToNow(Instant startInstant) {
+        return Duration.between(startInstant, Instant.now());
     }
 
     void doRunnableWork() {
@@ -203,19 +210,19 @@ public class TaskTemplate {
         default void started() {
         }
 
-        default void cancelled(Exception e) {
+        default void cancelled(Exception e, Duration durationMs) {
         }
 
-        default void interrupted(Exception e) {
+        default void interrupted(Exception e, Duration durationMs) {
         }
 
-        default void timedOut(Exception e) {
+        default void timedOut(Exception e, Duration durationMs) {
         }
 
-        default void error(Exception e) {
+        default void error(Exception e, Duration durationMs) {
         }
 
-        default void completed(Object result) {
+        default void completed(Object result, Duration durationMs) {
         }
     }
 }

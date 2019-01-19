@@ -4,17 +4,20 @@ import com.scarlatti.swingutils.Widget;
 import com.scarlatti.swingutils.button.ButtonWidget;
 import com.scarlatti.swingutils.button.ButtonWidget.ButtonWidgetApi;
 import com.scarlatti.swingutils.button.ButtonWidget.ButtonWidgetEvents;
+import com.scarlatti.swingutils.exception.ExceptionViewerWidget;
 import com.scarlatti.swingutils.messaging.MessageBus;
-import com.scarlatti.swingutils.messaging.MessageBus.Binding;
 import com.scarlatti.swingutils.messaging.MessageBus.Connection;
 import com.scarlatti.swingutils.messaging.MessageBus.Topic;
 import com.scarlatti.swingutils.progressbar.ProgressBarWidget.ProgressBarWidgetApi;
 import com.scarlatti.swingutils.progressbar.TaskTemplate.TaskTemplateApi;
 import com.scarlatti.swingutils.progressbar.TaskTemplate.TaskTemplateEvents;
+import com.scarlatti.swingutils.text.HtmlTextWidget;
 import com.scarlatti.swingutils.text.MultilineTextWidget;
 
 import javax.swing.*;
 import java.awt.*;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.function.Consumer;
 
 import static com.scarlatti.swingutils.SwingUtils.makeBold;
@@ -30,6 +33,8 @@ public class TaskProgressBarWidget implements Widget {
     private TaskTemplate taskTemplate = defaultTaskTemplate();
     private ProgressBarWidget progressBarWidget = defaultProgressBarWidget();
     private ButtonWidget statusButtonWidget = defaultStatusButtonWidget();
+    private HtmlTextWidget infoWidget;
+    private GroupLayout gl;
     private JPanel widgetPanel;
     private String title;
     private String message;
@@ -74,7 +79,7 @@ public class TaskProgressBarWidget implements Widget {
         titleLabel.setFont(makeBold(titleLabel.getFont()));
         Container messageComponent = MultilineTextWidget.ui(message);
 
-        GroupLayout gl = new GroupLayout(widgetPanel);
+        gl = new GroupLayout(widgetPanel);
         widgetPanel.setLayout(gl);
 
         gl.setAutoCreateGaps(true);
@@ -176,6 +181,8 @@ public class TaskProgressBarWidget implements Widget {
                     }
                     break;
             }
+
+            widgetPanel.revalidate();
         });
     }
 
@@ -236,41 +243,54 @@ public class TaskProgressBarWidget implements Widget {
             public void started() {
                 progressBarWidgetApi.start();
                 taskState = TaskState.IN_PROGRESS;
+                if (infoWidget != null) {
+                    gl.replace(infoWidget.getUi(), progressBarWidget.getUi());
+                }
                 configureStatusButtonByState();
             }
 
             @Override
-            public void cancelled(Exception e) {
+            public void cancelled(Exception e, Duration duration) {
                 progressBarWidgetApi.stop();
                 taskState = TaskState.CANCELLED;
+                infoWidget = infoWidgetForCancelled(e);
+                gl.replace(progressBarWidget.getUi(), infoWidget.getUi());
                 configureStatusButtonByState();
             }
 
             @Override
-            public void interrupted(Exception e) {
+            public void interrupted(Exception e, Duration duration) {
                 progressBarWidgetApi.stop();
                 taskState = TaskState.FAILED;
+                infoWidget = infoWidgetForError(e);
+                gl.replace(progressBarWidget.getUi(), infoWidget.getUi());
                 configureStatusButtonByState();
             }
 
             @Override
-            public void timedOut(Exception e) {
+            public void timedOut(Exception e, Duration duration) {
                 progressBarWidgetApi.stop();
                 taskState = TaskState.TIMED_OUT;
+                infoWidget = infoWidgetForTimeout(e);
+                gl.replace(progressBarWidget.getUi(), infoWidget.getUi());
                 configureStatusButtonByState();
             }
 
             @Override
-            public void error(Exception e) {
+            public void error(Exception e, Duration duration) {
                 progressBarWidgetApi.stop();
                 taskState = TaskState.FAILED;
+                infoWidget = infoWidgetForError(e);
+                gl.replace(progressBarWidget.getUi(), infoWidget.getUi());
                 configureStatusButtonByState();
             }
 
             @Override
-            public void completed(Object result) {
+            public void completed(Object result, Duration duration) {
                 progressBarWidgetApi.complete();
                 taskState = TaskState.COMPLETE;
+                infoWidget = infoWidgetForCompleted(result, duration);
+                gl.replace(progressBarWidget.getUi(), infoWidget.getUi());
                 configureStatusButtonByState();
             }
         });
@@ -335,6 +355,54 @@ public class TaskProgressBarWidget implements Widget {
 
     private TaskTemplate defaultTaskTemplate() {
         return TaskTemplate.task(taskTemplateWidget -> {
+        });
+    }
+
+    private HtmlTextWidget infoWidgetForTimeout(Exception e) {
+        return new HtmlTextWidget(htmlTextWidget -> {
+            htmlTextWidget.setHtml(
+                "Task <a style='color: #c11d1d;' href='info'>timed out</a>."
+            );
+            htmlTextWidget.onClick("info", widget -> {
+                ExceptionViewerWidget.displayModal(e, widgetPanel);
+            });
+        });
+    }
+
+    private HtmlTextWidget infoWidgetForError(Exception e) {
+        return new HtmlTextWidget(htmlTextWidget -> {
+            htmlTextWidget.setHtml(
+                "<a style='color: #c11d1d;' href='info'>Error</a> executing task."
+            );
+            htmlTextWidget.onClick("info", widget -> {
+                ExceptionViewerWidget.displayModal(e, widgetPanel);
+            });
+        });
+    }
+
+    private HtmlTextWidget infoWidgetForCancelled(Exception e) {
+        return new HtmlTextWidget(htmlTextWidget -> {
+            htmlTextWidget.setHtml(
+                "Task <a style='color: #c11d1d;' href='info'>cancelled by user</a>."
+            );
+            htmlTextWidget.onClick("info", widget -> {
+                ExceptionViewerWidget.displayModal(e, widgetPanel);
+            });
+        });
+    }
+
+    private HtmlTextWidget infoWidgetForCompleted(Object result, Duration duration) {
+        return new HtmlTextWidget(htmlTextWidget -> {
+            htmlTextWidget.setHtml(
+                "Task <a style='color: #4DB146;' href='info'>complete</a> in " + duration + "."
+            );
+            htmlTextWidget.onClick("info", widget -> {
+                JOptionPane.showMessageDialog(widget, HtmlTextWidget.ui(resultWidget -> {
+                    resultWidget.setHtml(
+                        "Result was: <br/>" + String.valueOf(result)
+                    );
+                }));
+            });
         });
     }
 

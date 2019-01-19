@@ -17,6 +17,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.font.TextAttribute;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -130,7 +131,7 @@ public class ProgressBarUi implements Widget {
             }
 
             @Override
-            public void cancelled(Exception e) {
+            public void cancelled(Exception e, Duration durationMs) {
                 taskState = TaskState.CANCELLED;
                 taskException = e;
                 SwingUtilities.invokeLater(() -> {
@@ -141,7 +142,7 @@ public class ProgressBarUi implements Widget {
             }
 
             @Override
-            public void interrupted(Exception e) {
+            public void interrupted(Exception e, Duration durationMs) {
                 taskState = TaskState.FAILED;
                 taskException = e;
                 SwingUtilities.invokeLater(() -> {
@@ -153,7 +154,7 @@ public class ProgressBarUi implements Widget {
             }
 
             @Override
-            public void timedOut(Exception e) {
+            public void timedOut(Exception e, Duration durationMs) {
                 taskState = TaskState.TIMEOUT;
                 taskException = e;
                 SwingUtilities.invokeLater(() -> {
@@ -164,7 +165,7 @@ public class ProgressBarUi implements Widget {
             }
 
             @Override
-            public void error(Exception e) {
+            public void error(Exception e, Duration durationMs) {
                 taskState = TaskState.FAILED;
                 taskException = e;
                 SwingUtilities.invokeLater(() -> {
@@ -175,7 +176,7 @@ public class ProgressBarUi implements Widget {
             }
 
             @Override
-            public void completed(Object result) {
+            public void completed(Object result, Duration durationMs) {
                 taskState = TaskState.COMPLETE;
                 taskException = null;
                 SwingUtilities.invokeLater(() -> {

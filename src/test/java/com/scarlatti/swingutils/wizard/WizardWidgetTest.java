@@ -7,6 +7,7 @@ import com.scarlatti.swingutils.flow.FlowWidget;
 import com.scarlatti.swingutils.grid.RowsWidget;
 import com.scarlatti.swingutils.progressbar.ProgressBarUi;
 import com.scarlatti.swingutils.progressbar.ProgressBarWidgetOld;
+import com.scarlatti.swingutils.progressbar.TaskProgressBarWidget;
 import com.scarlatti.swingutils.text.MultilineTextWidget;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -172,7 +173,7 @@ public class WizardWidgetTest {
                         })
                     );
                     rowsWidget.addRow(
-                        ProgressBarWidgetOld.ui2(progressBarWidget -> {
+                        TaskProgressBarWidget.ui(progressBarWidget -> {
                             progressBarWidget.setRepeatable(false);
                             progressBarWidget.getTaskTemplate().setWork(() -> {
                                 sleep(3000);
