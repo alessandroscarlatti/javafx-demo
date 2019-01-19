@@ -334,7 +334,8 @@ public class TaskProgressBarWidget implements Widget {
     }
 
     private TaskTemplate defaultTaskTemplate() {
-        return new TaskTemplate();
+        return TaskTemplate.task(taskTemplateWidget -> {
+        });
     }
 
     public TaskTemplate getTaskTemplate() {
@@ -351,6 +352,14 @@ public class TaskProgressBarWidget implements Widget {
 
     public void setProgressBarWidget(ProgressBarWidget progressBarWidget) {
         this.progressBarWidget = progressBarWidget;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public MessageBus getMessageBus() {

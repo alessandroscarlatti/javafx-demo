@@ -20,13 +20,9 @@ public class TaskTemplateTest {
     public void showTaskProgressBarTemplate() {
         SwingUtils.display(
             TaskProgressBarWidget.ui(taskProgressBarWidget -> {
-                taskProgressBarWidget.setTaskTemplate(
-                    TaskTemplate.task(taskTemplate -> {
-                        taskTemplate.setWork(() -> {
-                            sleep(2000);
-                        });
-                    })
-                );
+                taskProgressBarWidget.getTaskTemplate().setWork(() -> {
+                    sleep(2000);
+                });
                 taskProgressBarWidget.setTitle("Task 1");
                 taskProgressBarWidget.setMessage("This is a long task.");
             })

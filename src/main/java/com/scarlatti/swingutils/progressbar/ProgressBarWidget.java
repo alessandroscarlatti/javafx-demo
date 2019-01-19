@@ -85,7 +85,9 @@ public class ProgressBarWidget implements Widget {
                     paintTask.cancel(true);
                     paintTask = null;
                 }
-                widgetProgressBar.setValue(PROGRESS_BAR_LENGTH);
+                SwingUtilities.invokeLater(() -> {
+                    widgetProgressBar.setValue(PROGRESS_BAR_LENGTH);
+                });
             }
         });
     }

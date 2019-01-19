@@ -82,12 +82,17 @@ public class MessageBus {
         private void performQueuedInvocationsOnAllSubscribers() throws Throwable {
             while (queue.size() > 0) {
                 Invocation invocation = queue.peek();
-
+                boolean foundAnySubscriber = false;
                 for (Connection connection : connections) {
                     if (connection.hasSubscriptionForTopic(topic)) {
+                        foundAnySubscriber = true;
                         T subscriptionObject = (T) connection.getTopicSubject(topic);
                         invocation.method.invoke(subscriptionObject, invocation.args);
                     }
+                }
+
+                if (!foundAnySubscriber) {
+//                    System.out.println("No subscribers for invocation on bus " + MessageBus.this + ": " + invocation);
                 }
 
                 // poll after we have notified subscribers so that new invocations
@@ -104,6 +109,14 @@ public class MessageBus {
             public Invocation(Method method, Object[] args) {
                 this.method = method;
                 this.args = args;
+            }
+
+            @Override
+            public String toString() {
+                return "Invocation{" +
+                    "method=" + method +
+                    ", args=" + Arrays.toString(args) +
+                    '}';
             }
         }
     }

@@ -28,7 +28,7 @@ public class HyperlinkTest {
         content.setContentType("text/html");
         content.setEditable(false);
         content.setOpaque(false);
-        content.setText("<html><h1>Stuff and Things</h1><a style='color: red;' href=\"http://stackoverflow.com\">Link</a></html>");
+        content.setText("<html><h1>Stuff and Things</h1><a style='color: red;' href='http://stackoverflow.com'>Link</a><a href=\"stuff\">Link2</a></html>");
         content.addHyperlinkListener(new HyperlinkListener() {
             @Override
             public void hyperlinkUpdate(HyperlinkEvent e) {
