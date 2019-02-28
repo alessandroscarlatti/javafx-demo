@@ -1,5 +1,7 @@
 package com.scarlatti.swingutils;
 
+import jdk.nashorn.internal.ir.ReturnNode;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -82,6 +84,10 @@ public class SwingUtils {
         } catch (InterruptedException e) {
             throw new RuntimeException("Error awaiting window close.", e);
         }
+    }
+
+    public static String readResource(String fullResourcePath) {
+        return new Scanner(SwingUtils.class.getResourceAsStream(fullResourcePath)).useDelimiter("\\Z").next();
     }
 
     public static void setSystemLookAndFeel() {

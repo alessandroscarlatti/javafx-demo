@@ -5,7 +5,6 @@ import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ListChangeListener.Change;
 import javafx.concurrent.Worker.State;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -76,7 +75,7 @@ class Browser extends Region {
         "http://blogs.oracle.com/",
         "http://docs.oracle.com/javase/index.html",
         "http://www.oracle.com/partners/index.html",
-        WebViewSample.class.getResource("help.html").toExternalForm()
+        SimpleBrowser.class.getResource("help.html").toExternalForm()
     };
     final ImageView selectedImage = new ImageView();
     final Hyperlink[] hpls = new Hyperlink[captions.length];

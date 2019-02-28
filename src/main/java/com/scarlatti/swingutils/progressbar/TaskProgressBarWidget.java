@@ -17,7 +17,6 @@ import com.scarlatti.swingutils.text.MultilineTextWidget;
 import javax.swing.*;
 import java.awt.*;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.function.Consumer;
 
 import static com.scarlatti.swingutils.SwingUtils.makeBold;
