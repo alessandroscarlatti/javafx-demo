@@ -1,6 +1,8 @@
 package com.scarlatti.reactive;
 
+import java.awt.*;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * @author Alessandro Scarlatti
@@ -13,6 +15,7 @@ import java.util.List;
 public class ReactiveComponent {
 
     private List<ReactiveComponent> children;
+    private Container _previousContainer;
 
     /**
      * Analogous to React.Component#construct()
@@ -26,8 +29,9 @@ public class ReactiveComponent {
      * The component should update after the state is changed.
      * In this model this should happen synchronously.
      */
-    private void _setState(Runnable stateModification) {
-
+    <T extends ReactiveComponent> void _setState(Consumer<T> stateModification) {
+        stateModification.accept((T) this);
+        _render(_previousContainer);
     }
 
     /**
@@ -38,8 +42,9 @@ public class ReactiveComponent {
      *
      * There will be contextual parameters provided
      * so that this component can properly render itself.
+     * @param container
      */
-    public void _render(/*contextual parameters*/) {
+    public void _render(/*contextual parameters*/Container container) {
 
     }
 
