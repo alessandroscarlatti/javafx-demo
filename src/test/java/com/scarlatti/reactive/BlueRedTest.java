@@ -58,17 +58,7 @@ public class BlueRedTest {
             });
         }
 
-        @Override
-        public void _render(Container container) {
-            // need to distinguish between first time and subsequent times
-            if (jPanel == null) {
-                _renderFirst(container);
-            } else {
-                _renderUpdate(container);
-            }
-        }
-
-        private void _renderFirst(Container container) {
+        void _renderFirst(Container container) {
             JPanel jPanel = new JPanel();
             jPanel.setBackground(this.state.color);
             jPanel.addMouseListener(new MouseAdapter() {
@@ -82,7 +72,7 @@ public class BlueRedTest {
             container.add(jPanel);
         }
 
-        private void _renderUpdate(Container container) {
+        void _renderUpdate(Container container) {
             jPanel.setBackground(this.state.color);
 
             // no mount necessary

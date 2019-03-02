@@ -16,6 +16,7 @@ public class ReactiveComponent {
 
     private List<ReactiveComponent> children;
     private Container _previousContainer;
+    private boolean hasRenderedFirst;
 
     /**
      * Analogous to React.Component#construct()
@@ -31,7 +32,12 @@ public class ReactiveComponent {
      */
     <T extends ReactiveComponent> void _setState(Consumer<T> stateModification) {
         stateModification.accept((T) this);
-        _render(_previousContainer);
+        if (hasRenderedFirst) {
+            _renderUpdate(_previousContainer);
+        } else {
+            _renderFirst(_previousContainer);
+            hasRenderedFirst = true;
+        }
     }
 
     /**
@@ -45,6 +51,20 @@ public class ReactiveComponent {
      * @param container
      */
     public void _render(/*contextual parameters*/Container container) {
+        _previousContainer = container;
+        if (hasRenderedFirst) {
+            _renderUpdate(container);
+        } else {
+            _renderFirst(container);
+            hasRenderedFirst = true;
+        }
+    }
+
+    void _renderFirst(Container container) {
+
+    }
+
+    void _renderUpdate(Container container) {
 
     }
 
