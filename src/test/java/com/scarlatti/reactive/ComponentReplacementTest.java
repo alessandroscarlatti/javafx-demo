@@ -8,7 +8,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.lang.ref.Reference;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -191,6 +190,89 @@ public class ComponentReplacementTest {
             return jPanel;
         });
     }
+
+    @Test
+    public void removeThenInsertComponentInGroupLayout() {
+        SwingUtils.display(() -> {
+            JPanel jPanel = new JPanel();
+
+            GroupLayout gl = new GroupLayout(jPanel);
+            jPanel.setLayout(gl);
+
+            JButton button1 = new JButton("Remove Button3");  // will remove Button3
+            JButton button2 = new JButton("Replace Button3");  // will replace Button3
+            JButton button3 = new JButton("Button3");
+            JButton button4 = new JButton("Button4");
+
+
+            GroupLayout.SequentialGroup hGroup = gl.createSequentialGroup()
+                .addComponent(button1)
+                .addComponent(button2)
+                .addComponent(button3)
+                .addComponent(button4);
+
+            GroupLayout.ParallelGroup vGroup = gl.createParallelGroup()
+                .addComponent(button1)
+                .addComponent(button2)
+                .addComponent(button3)
+                .addComponent(button4);
+
+            gl.setHorizontalGroup(hGroup);
+            gl.setVerticalGroup(vGroup);
+
+            AtomicReference<GroupLayout.SequentialGroup> hGroupRef = new AtomicReference<>(hGroup);
+            AtomicReference<GroupLayout.ParallelGroup> vGroupRef = new AtomicReference<>(vGroup);
+
+            button1.addActionListener(event -> {
+                jPanel.remove(button3);
+                jPanel.revalidate();
+                jPanel.repaint();
+            });
+
+            button2.addActionListener(event -> {
+
+                jPanel.add(button3, 2);
+                GroupLayout.SequentialGroup hGroup2  = gl.createSequentialGroup()
+                    .addComponent(button1)
+                    .addComponent(button2)
+                    .addComponent(button3);
+
+                GroupLayout.ParallelGroup vGroup2 = gl.createParallelGroup()
+                    .addComponent(button1)
+                    .addComponent(button2)
+                    .addComponent(button3);
+
+                gl.setHorizontalGroup(hGroup2);
+                gl.setVerticalGroup(vGroup2);
+
+                jPanel.invalidate();
+
+                jPanel.revalidate();
+                jPanel.repaint();
+
+            });
+
+            button4.addActionListener(event -> {
+                GroupLayout.SequentialGroup hGroup2  = gl.createSequentialGroup()
+                    .addComponent(button2)
+                    .addComponent(button1)
+                    .addComponent(button3);
+
+                GroupLayout.ParallelGroup vGroup2 = gl.createParallelGroup()
+                    .addComponent(button2)
+                    .addComponent(button1)
+                    .addComponent(button3);
+
+                gl.setHorizontalGroup(hGroup2);
+                gl.setVerticalGroup(vGroup2);
+                jPanel.revalidate();
+                jPanel.repaint();
+            });
+
+            return jPanel;
+        });
+    }
+
 
     public static Component findPrevFocus() {
         Component c = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
